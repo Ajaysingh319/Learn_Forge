@@ -1,7 +1,10 @@
 package com.learnforge.server.service;
 
 import com.learnforge.server.dto.CourseResponse;
+import com.learnforge.server.dto.CourseSummaryResponse;
 import com.learnforge.server.dto.CreateCourseRequest;
+import com.learnforge.server.dto.GeneratedCourseOutlineResponse;
+import com.learnforge.server.exception.ForbiddenException;
 import com.learnforge.server.exception.ResourceNotFoundException;
 import com.learnforge.server.model.Course;
 import com.learnforge.server.model.CourseModule;
@@ -9,8 +12,10 @@ import com.learnforge.server.model.Lesson;
 import com.learnforge.server.repository.CourseModuleRepository;
 import com.learnforge.server.repository.CourseRepository;
 import com.learnforge.server.repository.LessonRepository;
+import com.learnforge.server.util.CourseMapper;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,7 +49,7 @@ public class CourseServiceImpl implements CourseService {
         course.setUpdatedAt(now);
         course = courseRepository.save(course);
 
-        List<String> moduleIds = new ArrayList<>();
+        List<String> moduleIds = new ArrayList<String>();
         for (CreateCourseRequest.ModulePayload modulePayload : request.getModules()) {
             CourseModule module = new CourseModule();
             module.setTitle(modulePayload.getTitle());
@@ -53,7 +58,7 @@ public class CourseServiceImpl implements CourseService {
             module.setUpdatedAt(now);
             module = courseModuleRepository.save(module);
 
-            List<String> lessonIds = new ArrayList<>();
+            List<String> lessonIds = new ArrayList<String>();
             for (CreateCourseRequest.LessonPayload lessonPayload : modulePayload.getLessons()) {
                 Lesson lesson = new Lesson();
                 lesson.setTitle(lessonPayload.getTitle());
@@ -81,16 +86,71 @@ public class CourseServiceImpl implements CourseService {
     }
 
     @Override
-    public CourseResponse getCourseById(String courseId) {
-        Course course = courseRepository.findById(courseId)
-                .orElseThrow(() -> new ResourceNotFoundException("Course not found: " + courseId));
+    public CourseResponse saveGeneratedOutline(GeneratedCourseOutlineResponse outline, String creatorSub) {
+        CreateCourseRequest request = CourseMapper.fromGeneratedOutline(outline);
+        return createCourse(request, creatorSub);
+    }
+
+    @Override
+    public CourseResponse getCourseById(String courseId, String requesterSub) {
+        Course course = findCourseOrThrow(courseId);
+        assertOwner(course, requesterSub);
         return buildCourseResponse(course);
     }
 
     @Override
     public List<CourseResponse> getCoursesByCreator(String creatorSub) {
         List<Course> courses = courseRepository.findByCreatorOrderByCreatedAtDesc(creatorSub);
-        return courses.stream().map(this::buildCourseResponse).toList();
+        List<CourseResponse> responses = new ArrayList<CourseResponse>();
+        for (Course course : courses) {
+            responses.add(buildCourseResponse(course));
+        }
+        return responses;
+    }
+
+    @Override
+    public List<CourseSummaryResponse> getCourseSummariesByCreator(String creatorSub) {
+        List<Course> courses = courseRepository.findByCreatorOrderByCreatedAtDesc(creatorSub);
+        List<CourseSummaryResponse> summaries = new ArrayList<CourseSummaryResponse>();
+        for (Course course : courses) {
+            summaries.add(buildCourseSummary(course));
+        }
+        return summaries;
+    }
+
+    private Course findCourseOrThrow(String courseId) {
+        return courseRepository.findById(courseId)
+                .orElseThrow(() -> new ResourceNotFoundException("Course not found: " + courseId));
+    }
+
+    private void assertOwner(Course course, String requesterSub) {
+        if (course.getCreator() == null || !course.getCreator().equals(requesterSub)) {
+            throw new ForbiddenException("You do not have access to this course");
+        }
+    }
+
+    private CourseSummaryResponse buildCourseSummary(Course course) {
+        CourseSummaryResponse summary = new CourseSummaryResponse();
+        summary.setId(course.getId());
+        summary.setTitle(course.getTitle());
+        summary.setDescription(course.getDescription());
+        summary.setCreator(course.getCreator());
+        summary.setTags(new ArrayList<>(safeList(course.getTags())));
+        summary.setCreatedAt(course.getCreatedAt());
+        summary.setUpdatedAt(course.getUpdatedAt());
+
+        List<String> moduleIds = safeList(course.getModuleIds());
+        summary.setModuleCount(moduleIds.size());
+
+        int lessonCount = 0;
+        if (!moduleIds.isEmpty()) {
+            List<CourseModule> modules = courseModuleRepository.findAllById(moduleIds);
+            for (CourseModule module : modules) {
+                lessonCount += safeList(module.getLessonIds()).size();
+            }
+        }
+        summary.setLessonCount(lessonCount);
+        return summary;
     }
 
     private CourseResponse buildCourseResponse(Course course) {
@@ -104,12 +164,12 @@ public class CourseServiceImpl implements CourseService {
         response.setUpdatedAt(course.getUpdatedAt());
 
         List<CourseModule> modules = sortedByIds(
-                courseModuleRepository.findAllById(course.getModuleIds()),
+                courseModuleRepository.findAllById(safeList(course.getModuleIds())),
                 CourseModule::getId,
-                course.getModuleIds()
+                safeList(course.getModuleIds())
         );
 
-        List<CourseResponse.ModuleResponse> moduleResponses = new ArrayList<>();
+        List<CourseResponse.ModuleResponse> moduleResponses = new ArrayList<CourseResponse.ModuleResponse>();
         for (CourseModule module : modules) {
             CourseResponse.ModuleResponse moduleResponse = new CourseResponse.ModuleResponse();
             moduleResponse.setId(module.getId());
@@ -118,12 +178,12 @@ public class CourseServiceImpl implements CourseService {
             moduleResponse.setUpdatedAt(module.getUpdatedAt());
 
             List<Lesson> lessons = sortedByIds(
-                    lessonRepository.findAllById(module.getLessonIds()),
+                    lessonRepository.findAllById(safeList(module.getLessonIds())),
                     Lesson::getId,
-                    module.getLessonIds()
+                    safeList(module.getLessonIds())
             );
 
-            List<CourseResponse.LessonResponse> lessonResponses = new ArrayList<>();
+            List<CourseResponse.LessonResponse> lessonResponses = new ArrayList<CourseResponse.LessonResponse>();
             for (Lesson lesson : lessons) {
                 CourseResponse.LessonResponse lessonResponse = new CourseResponse.LessonResponse();
                 lessonResponse.setId(lesson.getId());
@@ -145,7 +205,7 @@ public class CourseServiceImpl implements CourseService {
     }
 
     private <T> List<T> sortedByIds(List<T> source, Function<T, String> idSelector, List<String> orderedIds) {
-        Map<String, Integer> orderIndex = new HashMap<>();
+        Map<String, Integer> orderIndex = new HashMap<String, Integer>();
         for (int i = 0; i < orderedIds.size(); i++) {
             orderIndex.put(orderedIds.get(i), i);
         }
@@ -158,6 +218,6 @@ public class CourseServiceImpl implements CourseService {
     }
 
     private <T> List<T> safeList(List<T> list) {
-        return list == null ? List.of() : list;
+        return list == null ? Collections.<T>emptyList() : list;
     }
 }

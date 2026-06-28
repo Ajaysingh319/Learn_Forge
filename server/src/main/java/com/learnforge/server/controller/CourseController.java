@@ -1,7 +1,9 @@
 package com.learnforge.server.controller;
 
 import com.learnforge.server.dto.CourseResponse;
+import com.learnforge.server.dto.CourseSummaryResponse;
 import com.learnforge.server.dto.CreateCourseRequest;
+import com.learnforge.server.dto.GeneratedCourseOutlineResponse;
 import com.learnforge.server.service.CourseService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -33,13 +35,26 @@ public class CourseController {
         return courseService.createCourse(request, jwt.getSubject());
     }
 
+    @PostMapping("/save-outline")
+    @ResponseStatus(HttpStatus.CREATED)
+    public CourseResponse saveGeneratedOutline(@Valid @RequestBody GeneratedCourseOutlineResponse outline,
+                                               @AuthenticationPrincipal Jwt jwt) {
+        return courseService.saveGeneratedOutline(outline, jwt.getSubject());
+    }
+
     @GetMapping("/my")
+    public List<CourseSummaryResponse> getMyCourseSummaries(@AuthenticationPrincipal Jwt jwt) {
+        return courseService.getCourseSummariesByCreator(jwt.getSubject());
+    }
+
+    @GetMapping("/my/full")
     public List<CourseResponse> getMyCourses(@AuthenticationPrincipal Jwt jwt) {
         return courseService.getCoursesByCreator(jwt.getSubject());
     }
 
     @GetMapping("/{courseId}")
-    public CourseResponse getCourseById(@PathVariable String courseId) {
-        return courseService.getCourseById(courseId);
+    public CourseResponse getCourseById(@PathVariable String courseId,
+                                        @AuthenticationPrincipal Jwt jwt) {
+        return courseService.getCourseById(courseId, jwt.getSubject());
     }
 }

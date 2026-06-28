@@ -1,5 +1,20 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080'
 
+async function authFetch(path, getAccessTokenSilently, options = {}) {
+  const token = await getAccessTokenSilently()
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    ...options,
+    headers: {
+      ...(options.headers || {}),
+      Authorization: `Bearer ${token}`,
+    },
+  })
+  if (!response.ok) {
+    throw new Error(`Request failed: ${response.status}`)
+  }
+  return response.json()
+}
+
 export async function fetchHealth() {
   const response = await fetch(`${API_BASE_URL}/api/health`)
   if (!response.ok) {
@@ -8,33 +23,40 @@ export async function fetchHealth() {
   return response.json()
 }
 
-export async function fetchMyCourses(getAccessTokenSilently) {
-  const token = await getAccessTokenSilently()
-  const response = await fetch(`${API_BASE_URL}/api/courses/my`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+export async function generateCourse(topic, getAccessTokenSilently) {
+  return authFetch('/api/ai/generate-course', getAccessTokenSilently, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ topic }),
   })
-  if (!response.ok) {
-    throw new Error('Unable to fetch user courses')
-  }
-  return response.json()
+}
+
+export async function saveGeneratedOutline(outline, getAccessTokenSilently) {
+  return authFetch('/api/courses/save-outline', getAccessTokenSilently, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(outline),
+  })
+}
+
+export async function fetchMyCourses(getAccessTokenSilently) {
+  return authFetch('/api/courses/my', getAccessTokenSilently)
+}
+
+export async function fetchMyCoursesFull(getAccessTokenSilently) {
+  return authFetch('/api/courses/my/full', getAccessTokenSilently)
+}
+
+export async function fetchCourseById(courseId, getAccessTokenSilently) {
+  return authFetch(`/api/courses/${courseId}`, getAccessTokenSilently)
 }
 
 export async function createCourse(payload, getAccessTokenSilently) {
-  const token = await getAccessTokenSilently()
-  const response = await fetch(`${API_BASE_URL}/api/courses`, {
+  return authFetch('/api/courses', getAccessTokenSilently, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   })
-  if (!response.ok) {
-    throw new Error('Unable to create course')
-  }
-  return response.json()
 }
 
 export { API_BASE_URL }

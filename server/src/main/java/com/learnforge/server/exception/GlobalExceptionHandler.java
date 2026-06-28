@@ -59,6 +59,19 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<ApiErrorResponse> handleForbidden(
+            ForbiddenException ex,
+            HttpServletRequest request
+    ) {
+        return buildError(
+                request,
+                HttpStatus.FORBIDDEN,
+                ex.getMessage(),
+                java.util.Collections.emptyList()
+        );
+    }
+
     @ExceptionHandler(AiGenerationException.class)
     public ResponseEntity<ApiErrorResponse> handleAiGeneration(
             AiGenerationException ex,
