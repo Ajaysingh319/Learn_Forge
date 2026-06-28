@@ -1,0 +1,27 @@
+# OS/editor
+.DS_Store
+.idea/
+.vscode/
+
+# Logs
+*.log
+logs/
+
+# Env files
+.env
+.env.*
+!.env.example
+
+# Node (client)
+client/node_modules/
+client/dist/
+client/.cache/
+
+# Java / Maven (server)
+server/target/
+server/.mvn/wrapper/maven-wrapper.jar
+
+# Coverage and reports
+coverage/
+*.lcov
+
