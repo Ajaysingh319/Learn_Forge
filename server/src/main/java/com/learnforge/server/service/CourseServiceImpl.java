@@ -33,12 +33,12 @@ public class CourseServiceImpl implements CourseService {
     }
 
     @Override
-    public CourseResponse createCourse(CreateCourseRequest request) {
+    public CourseResponse createCourse(CreateCourseRequest request, String creatorSub) {
         Instant now = Instant.now();
         Course course = new Course();
         course.setTitle(request.getTitle());
         course.setDescription(request.getDescription());
-        course.setCreator(request.getCreator());
+        course.setCreator(creatorSub);
         course.setTags(new ArrayList<>(safeList(request.getTags())));
         course.setCreatedAt(now);
         course.setUpdatedAt(now);
@@ -85,6 +85,12 @@ public class CourseServiceImpl implements CourseService {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found: " + courseId));
         return buildCourseResponse(course);
+    }
+
+    @Override
+    public List<CourseResponse> getCoursesByCreator(String creatorSub) {
+        List<Course> courses = courseRepository.findByCreatorOrderByCreatedAtDesc(creatorSub);
+        return courses.stream().map(this::buildCourseResponse).toList();
     }
 
     private CourseResponse buildCourseResponse(Course course) {

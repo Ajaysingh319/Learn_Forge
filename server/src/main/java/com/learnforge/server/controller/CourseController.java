@@ -4,7 +4,10 @@ import com.learnforge.server.dto.CourseResponse;
 import com.learnforge.server.dto.CreateCourseRequest;
 import com.learnforge.server.service.CourseService;
 import jakarta.validation.Valid;
+import java.util.List;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,8 +28,14 @@ public class CourseController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public CourseResponse createCourse(@Valid @RequestBody CreateCourseRequest request) {
-        return courseService.createCourse(request);
+    public CourseResponse createCourse(@Valid @RequestBody CreateCourseRequest request,
+                                       @AuthenticationPrincipal Jwt jwt) {
+        return courseService.createCourse(request, jwt.getSubject());
+    }
+
+    @GetMapping("/my")
+    public List<CourseResponse> getMyCourses(@AuthenticationPrincipal Jwt jwt) {
+        return courseService.getCoursesByCreator(jwt.getSubject());
     }
 
     @GetMapping("/{courseId}")

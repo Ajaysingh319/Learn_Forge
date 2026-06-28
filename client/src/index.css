@@ -45,6 +45,30 @@ a {
   margin-bottom: 1rem;
 }
 
+.auth-summary {
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.auth-user {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #cbd5e1;
+  word-break: break-word;
+}
+
+.auth-btn {
+  background: #334155;
+  color: #e2e8f0;
+  width: 100%;
+}
+
+.auth-btn:hover {
+  background: #475569;
+}
+
 .sidebar-nav {
   display: flex;
   flex-direction: column;

@@ -11,8 +11,6 @@ public class CreateCourseRequest {
     @NotBlank(message = "title is required")
     private String title;
     private String description;
-    @NotBlank(message = "creator is required")
-    private String creator;
     private List<String> tags = new ArrayList<>();
     @Valid
     @NotEmpty(message = "at least one module is required")
@@ -32,14 +30,6 @@ public class CreateCourseRequest {
 
     public void setDescription(String description) {
         this.description = description;
-    }
-
-    public String getCreator() {
-        return creator;
-    }
-
-    public void setCreator(String creator) {
-        this.creator = creator;
     }
 
     public List<String> getTags() {
