@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { useParams } from 'react-router-dom'
 import ErrorMessage from '../components/ErrorMessage'
 import HinglishAudioPanel from '../components/HinglishAudioPanel'
+import LessonPDFExporter from '../components/LessonPDFExporter'
 import LessonRenderer from '../components/LessonRenderer'
 import LoadingSpinner from '../components/LoadingSpinner'
 import useAuth from '../hooks/useAuth'
@@ -123,6 +124,13 @@ function LessonPage() {
   return (
     <section className="page">
       {error ? <ErrorMessage message={`${error}. Showing fallback lesson preview.`} /> : null}
+      <div className="lesson-page-toolbar">
+        <LessonPDFExporter
+          title={lesson?.title}
+          objectives={lesson?.objectives || []}
+          content={lesson?.content || []}
+        />
+      </div>
       <LessonRenderer
         title={lesson?.title}
         objectives={lesson?.objectives || []}

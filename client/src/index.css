@@ -420,6 +420,170 @@ button:disabled {
   font-size: 0.875rem;
 }
 
+.lesson-page-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+}
+
+.lesson-pdf-exporter {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.lesson-pdf-error {
+  margin: 0;
+  color: #b91c1c;
+  font-size: 0.875rem;
+}
+
+.lesson-pdf-capture {
+  position: fixed;
+  left: -10000px;
+  top: 0;
+  width: 794px;
+  pointer-events: none;
+}
+
+.lesson-pdf-document {
+  padding: 40px;
+  background: #ffffff;
+  color: #111827;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  line-height: 1.5;
+}
+
+.lesson-pdf-header {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.lesson-pdf-brand {
+  margin: 0 0 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #2563eb;
+}
+
+.lesson-pdf-title {
+  margin: 0;
+  font-size: 1.75rem;
+  line-height: 1.2;
+}
+
+.lesson-pdf-objectives {
+  margin-bottom: 1.5rem;
+}
+
+.lesson-pdf-objectives h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.125rem;
+}
+
+.lesson-pdf-objectives ul {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.lesson-pdf-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.pdf-block-heading {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #0f172a;
+}
+
+.pdf-block-paragraph {
+  margin: 0;
+  color: #334155;
+}
+
+.pdf-block-code {
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  overflow: hidden;
+  background: #f8fafc;
+}
+
+.pdf-block-code-label {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.pdf-block-code pre {
+  margin: 0;
+  padding: 0.875rem;
+  overflow-x: auto;
+}
+
+.pdf-block-code code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.8125rem;
+  color: #0f172a;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.pdf-block-video {
+  border: 1px solid #dbeafe;
+  border-radius: 0.375rem;
+  padding: 0.875rem;
+  background: #eff6ff;
+}
+
+.pdf-block-video p {
+  margin: 0.375rem 0 0;
+  color: #334155;
+}
+
+.pdf-block-mcq {
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  padding: 0.875rem;
+  background: #f9fafb;
+}
+
+.pdf-block-mcq-question {
+  margin: 0 0 0.75rem;
+  font-weight: 600;
+}
+
+.pdf-block-mcq-options {
+  margin: 0 0 0.75rem;
+  padding-left: 1.25rem;
+}
+
+.pdf-block-mcq-correct {
+  font-weight: 600;
+  color: #166534;
+}
+
+.pdf-block-mcq-explanation {
+  margin: 0;
+  color: #334155;
+}
+
+.pdf-block-unknown {
+  margin: 0;
+  padding: 0.75rem;
+  border-radius: 0.375rem;
+  background: #fff7ed;
+  color: #9a3412;
+}
+
 @keyframes spin {
   to {
     transform: rotate(360deg);
