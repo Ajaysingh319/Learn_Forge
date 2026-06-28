@@ -14,9 +14,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import com.learnforge.server.util.HttpRetryHelper;
 import org.springframework.stereotype.Service;
-
-@Service
 public class OpenAiClientService {
 
     private static final TypeReference<Map<String, Object>> MAP_TYPE = new TypeReference<Map<String, Object>>() {
@@ -64,7 +63,11 @@ public class OpenAiClientService {
                     .POST(HttpRequest.BodyPublishers.ofString(payload))
                     .build();
 
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> response = HttpRetryHelper.sendWithRetry(
+                    httpClient,
+                    request,
+                    aiProperties.getMaxRetries() + 1
+            );
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
                 throw new AiGenerationException("OpenAI request failed with status " + response.statusCode());
             }

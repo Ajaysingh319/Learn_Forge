@@ -2,8 +2,10 @@ package com.learnforge.server.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.learnforge.server.config.AiProperties;
 import com.learnforge.server.config.GeminiProperties;
 import com.learnforge.server.exception.AiGenerationException;
+import com.learnforge.server.util.HttpRetryHelper;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -23,11 +25,17 @@ public class GeminiClientService {
     };
 
     private final GeminiProperties geminiProperties;
+    private final AiProperties aiProperties;
     private final ObjectMapper objectMapper;
     private final HttpClient httpClient;
 
-    public GeminiClientService(GeminiProperties geminiProperties, ObjectMapper objectMapper) {
+    public GeminiClientService(
+            GeminiProperties geminiProperties,
+            AiProperties aiProperties,
+            ObjectMapper objectMapper
+    ) {
         this.geminiProperties = geminiProperties;
+        this.aiProperties = aiProperties;
         this.objectMapper = objectMapper;
         this.httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(10))
@@ -63,7 +71,11 @@ public class GeminiClientService {
                     .POST(HttpRequest.BodyPublishers.ofString(objectMapper.writeValueAsString(payload)))
                     .build();
 
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> response = HttpRetryHelper.sendWithRetry(
+                    httpClient,
+                    request,
+                    aiProperties.getMaxRetries() + 1
+            );
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
                 throw new AiGenerationException("Gemini request failed with status " + response.statusCode());
             }

@@ -5,6 +5,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "ai")
 public class AiProperties {
     private String provider = "template";
+    private int maxRetries = 2;
     private OpenAi openai = new OpenAi();
 
     public String getProvider() {
@@ -13,6 +14,14 @@ public class AiProperties {
 
     public void setProvider(String provider) {
         this.provider = provider;
+    }
+
+    public int getMaxRetries() {
+        return maxRetries;
+    }
+
+    public void setMaxRetries(int maxRetries) {
+        this.maxRetries = maxRetries;
     }
 
     public OpenAi getOpenai() {

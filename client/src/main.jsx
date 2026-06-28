@@ -5,6 +5,7 @@ import './index.css'
 import AppLayout from './App.jsx'
 import { AppProvider } from './context/AppContext'
 import AuthProviderWrapper from './context/AuthProviderWrapper'
+import { ToastProvider } from './context/ToastContext'
 import ProtectedRoute from './components/ProtectedRoute'
 import CoursePage from './pages/CoursePage'
 import HomePage from './pages/HomePage'
@@ -16,7 +17,8 @@ createRoot(document.getElementById('root')).render(
     <AuthProviderWrapper>
       <BrowserRouter>
         <AppProvider>
-          <Routes>
+          <ToastProvider>
+            <Routes>
             <Route path="/" element={<AppLayout />}>
               <Route index element={<HomePage />} />
               <Route
@@ -45,7 +47,8 @@ createRoot(document.getElementById('root')).render(
               />
               <Route path="*" element={<NotFoundPage />} />
             </Route>
-          </Routes>
+            </Routes>
+          </ToastProvider>
         </AppProvider>
       </BrowserRouter>
     </AuthProviderWrapper>

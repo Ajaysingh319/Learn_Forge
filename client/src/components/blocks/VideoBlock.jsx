@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import ErrorMessage from '../ErrorMessage'
 import { fetchYoutubeVideos } from '../../utils/api'
 
 function VideoBlock({ query, url }) {
@@ -7,39 +8,29 @@ function VideoBlock({ query, url }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  useEffect(() => {
+  const loadVideos = useCallback(async () => {
     if (!searchText) {
       setVideos([])
       setError('')
       return
     }
 
-    let active = true
-    async function loadVideos() {
-      setLoading(true)
-      setError('')
-      try {
-        const results = await fetchYoutubeVideos(searchText)
-        if (active) {
-          setVideos(results)
-        }
-      } catch (err) {
-        if (active) {
-          setError(err.message || 'Failed to fetch videos')
-          setVideos([])
-        }
-      } finally {
-        if (active) {
-          setLoading(false)
-        }
-      }
-    }
-
-    loadVideos()
-    return () => {
-      active = false
+    setLoading(true)
+    setError('')
+    try {
+      const results = await fetchYoutubeVideos(searchText)
+      setVideos(results)
+    } catch (err) {
+      setError(err.message || 'Failed to fetch videos')
+      setVideos([])
+    } finally {
+      setLoading(false)
     }
   }, [searchText])
+
+  useEffect(() => {
+    loadVideos()
+  }, [loadVideos])
 
   if (!searchText) {
     return null
@@ -53,7 +44,7 @@ function VideoBlock({ query, url }) {
       <div className="block-video-placeholder">
         <span>Video search: {searchText}</span>
         {loading ? <small>Loading YouTube suggestions...</small> : null}
-        {error ? <small>{error}</small> : null}
+        {error ? <ErrorMessage message={error} onRetry={loadVideos} /> : null}
         {!loading && !error && primary ? (
           <>
             <iframe

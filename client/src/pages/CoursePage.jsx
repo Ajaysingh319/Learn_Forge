@@ -9,7 +9,7 @@ function CoursePage() {
   const { courseId } = useParams()
   const { getAccessTokenSilently } = useAuth()
 
-  const { data: course, loading, error } = useAsync(
+  const { data: course, loading, error, reload } = useAsync(
     () => fetchCourseById(courseId, getAccessTokenSilently),
     [courseId, getAccessTokenSilently],
     Boolean(courseId),
@@ -19,11 +19,13 @@ function CoursePage() {
     <PageState
       loading={loading}
       error={!courseId ? 'Course id is missing.' : error}
+      onRetry={reload}
+      skeleton="cards"
       isEmpty={!loading && !error && !course}
       emptyMessage="Course not found."
     >
       <section className="page">
-        <header>
+        <header className="page-header">
           <h1>{course.title}</h1>
           <p>{course.description}</p>
         </header>

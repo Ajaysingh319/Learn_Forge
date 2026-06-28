@@ -1,58 +1,66 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import PromptForm from '../components/PromptForm'
 import ErrorMessage from '../components/ErrorMessage'
-import LoadingSpinner from '../components/LoadingSpinner'
+import { SkeletonList } from '../components/SkeletonLoader'
 import { useAppContext } from '../context/AppContext'
+import { useToast } from '../context/ToastContext'
 import useAuth from '../hooks/useAuth'
 import { fetchMyCourses, generateCourse, saveGeneratedOutline } from '../utils/api'
 
 function HomePage() {
   const { setLastPrompt, lastPrompt } = useAppContext()
+  const { pushToast } = useToast()
   const { isAuthenticated, user, getAccessTokenSilently } = useAuth()
   const [courses, setCourses] = useState([])
   const [loadingCourses, setLoadingCourses] = useState(false)
   const [generating, setGenerating] = useState(false)
-  const [error, setError] = useState('')
+  const [coursesError, setCoursesError] = useState('')
+  const [generateError, setGenerateError] = useState('')
 
-  useEffect(() => {
+  const loadCourses = useCallback(async () => {
     if (!isAuthenticated) {
       setCourses([])
       return
     }
 
-    async function loadCourses() {
-      setLoadingCourses(true)
-      setError('')
-      try {
-        const data = await fetchMyCourses(getAccessTokenSilently)
-        setCourses(data)
-      } catch (err) {
-        setError(err.message || 'Failed to load saved courses')
-      } finally {
-        setLoadingCourses(false)
-      }
+    setLoadingCourses(true)
+    setCoursesError('')
+    try {
+      const data = await fetchMyCourses(getAccessTokenSilently)
+      setCourses(data)
+    } catch (err) {
+      setCoursesError(err.message || 'Failed to load saved courses')
+    } finally {
+      setLoadingCourses(false)
     }
-
-    loadCourses()
   }, [isAuthenticated, getAccessTokenSilently])
+
+  useEffect(() => {
+    loadCourses()
+  }, [loadCourses])
 
   const handleGenerateAndSave = async (topic) => {
     setLastPrompt(topic)
     if (!isAuthenticated) {
-      setError('Please login to generate and save courses.')
+      const message = 'Please login to generate and save courses.'
+      setGenerateError(message)
+      pushToast(message, 'error')
       return
     }
 
     setGenerating(true)
-    setError('')
+    setGenerateError('')
     try {
       const outline = await generateCourse(topic, getAccessTokenSilently)
-      await saveGeneratedOutline(outline, getAccessTokenSilently)
+      const saved = await saveGeneratedOutline(outline, getAccessTokenSilently)
       const updatedCourses = await fetchMyCourses(getAccessTokenSilently)
       setCourses(updatedCourses)
+      pushToast(`Course "${saved.title || outline.title}" saved successfully.`, 'success')
     } catch (err) {
-      setError(err.message || 'Failed to generate and save course')
+      const message = err.message || 'Failed to generate and save course'
+      setGenerateError(message)
+      pushToast(message, 'error')
     } finally {
       setGenerating(false)
     }
@@ -60,14 +68,13 @@ function HomePage() {
 
   return (
     <section className="page">
-      <header>
+      <header className="page-header">
         <h1>Text-to-Learn Course Generator</h1>
         <p>Submit any topic and generate a structured course outline.</p>
       </header>
 
       <PromptForm onSubmit={handleGenerateAndSave} isLoading={generating} />
-
-      {error ? <ErrorMessage message={error} /> : null}
+      {generateError ? <ErrorMessage message={generateError} /> : null}
 
       <section className="card">
         <h2>Latest Prompt</h2>
@@ -85,7 +92,8 @@ function HomePage() {
 
       <section className="card">
         <h2>My Saved Courses</h2>
-        {loadingCourses ? <LoadingSpinner label="Loading saved courses..." /> : null}
+        {coursesError ? <ErrorMessage message={coursesError} onRetry={loadCourses} /> : null}
+        {loadingCourses ? <SkeletonList count={3} /> : null}
         {!loadingCourses && courses.length === 0 ? (
           <p>No saved courses yet. Generate one to get started.</p>
         ) : null}

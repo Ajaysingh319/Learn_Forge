@@ -4,7 +4,7 @@ import ErrorMessage from '../components/ErrorMessage'
 import HinglishAudioPanel from '../components/HinglishAudioPanel'
 import LessonPDFExporter from '../components/LessonPDFExporter'
 import LessonRenderer from '../components/LessonRenderer'
-import LoadingSpinner from '../components/LoadingSpinner'
+import { LessonSkeleton } from '../components/SkeletonLoader'
 import useAuth from '../hooks/useAuth'
 import useAsync from '../hooks/useAsync'
 import { fetchCourseById, fetchMyCoursesFull } from '../utils/api'
@@ -98,7 +98,7 @@ function LessonPage() {
     [id, courseId, moduleIndex, lessonIndex],
   )
 
-  const { data: lesson, loading, error } = useAsync(async () => {
+  const { data: lesson, loading, error, reload } = useAsync(async () => {
     if (isNestedRoute) {
       const course = await fetchCourseById(courseId, getAccessTokenSilently)
       const resolved = resolveLessonFromCourse(course, moduleIndex, lessonIndex)
@@ -114,16 +114,17 @@ function LessonPage() {
   }, [id, courseId, moduleIndex, lessonIndex, getAccessTokenSilently, isNestedRoute, fallbackLesson])
 
   if (loading) {
-    return (
-      <section className="page">
-        <LoadingSpinner label="Loading lesson..." />
-      </section>
-    )
+    return <LessonSkeleton />
   }
 
   return (
     <section className="page">
-      {error ? <ErrorMessage message={`${error}. Showing fallback lesson preview.`} /> : null}
+      {error ? (
+        <ErrorMessage
+          message={`${error}. Showing fallback lesson preview.`}
+          onRetry={reload}
+        />
+      ) : null}
       <div className="lesson-page-toolbar">
         <LessonPDFExporter
           title={lesson?.title}
