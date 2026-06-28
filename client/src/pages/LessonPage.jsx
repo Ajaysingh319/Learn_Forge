@@ -1,14 +1,15 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { useParams } from 'react-router-dom'
 import ErrorMessage from '../components/ErrorMessage'
 import LessonRenderer from '../components/LessonRenderer'
 import LoadingSpinner from '../components/LoadingSpinner'
 import useAuth from '../hooks/useAuth'
-import { fetchMyCoursesFull } from '../utils/api'
+import useAsync from '../hooks/useAsync'
+import { fetchCourseById, fetchMyCoursesFull } from '../utils/api'
 
-function buildSampleLesson(lessonId) {
+function buildSampleLesson(label) {
   return {
-    title: `Lesson: ${lessonId}`,
+    title: `Lesson: ${label}`,
     objectives: [
       'Understand the core concepts covered in this lesson',
       'Identify practical examples and use cases',
@@ -25,10 +26,7 @@ function buildSampleLesson(lessonId) {
         language: 'javascript',
         text: "const greeting = 'Hello, LearnForge!';\nconsole.log(greeting);",
       },
-      {
-        type: 'video',
-        query: 'Introductory tutorial for this lesson topic',
-      },
+      { type: 'video', query: 'Introductory tutorial for this lesson topic' },
       {
         type: 'mcq',
         question: 'What is the purpose of LessonRenderer?',
@@ -79,49 +77,51 @@ function findLessonInCourses(courses, lessonId) {
   return null
 }
 
-function LessonPage() {
-  const { id } = useParams()
-  const { getAccessTokenSilently } = useAuth()
-  const [lesson, setLesson] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-
-  const fallbackLesson = useMemo(() => buildSampleLesson(id), [id])
-
-  useEffect(() => {
-    if (!id) {
-      return
-    }
-
-    async function loadLesson() {
-      setLoading(true)
-      setError('')
-      try {
-        const courses = await fetchMyCoursesFull(getAccessTokenSilently)
-        const foundLesson = findLessonInCourses(courses, id)
-        setLesson(foundLesson || fallbackLesson)
-      } catch (err) {
-        setLesson(fallbackLesson)
-        setError(err.message || 'Showing demo lesson content')
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    loadLesson()
-  }, [id, getAccessTokenSilently, fallbackLesson])
-
-  if (!id) {
-    return <ErrorMessage message="Lesson id is missing." />
+function resolveLessonFromCourse(course, moduleIndex, lessonIndex) {
+  const module = course?.modules?.[Number(moduleIndex)]
+  const lesson = module?.lessons?.[Number(lessonIndex)]
+  if (!module || !lesson) {
+    return null
   }
+  return lesson
+}
+
+function LessonPage() {
+  const { id, courseId, moduleIndex, lessonIndex } = useParams()
+  const { getAccessTokenSilently } = useAuth()
+  const isNestedRoute = courseId !== undefined
+
+  const fallbackLesson = useMemo(
+    () => buildSampleLesson(id || `${courseId}-${moduleIndex}-${lessonIndex}`),
+    [id, courseId, moduleIndex, lessonIndex],
+  )
+
+  const { data: lesson, loading, error } = useAsync(async () => {
+    if (isNestedRoute) {
+      const course = await fetchCourseById(courseId, getAccessTokenSilently)
+      const resolved = resolveLessonFromCourse(course, moduleIndex, lessonIndex)
+      return resolved || fallbackLesson
+    }
+
+    if (id) {
+      const courses = await fetchMyCoursesFull(getAccessTokenSilently)
+      return findLessonInCourses(courses, id) || fallbackLesson
+    }
+
+    throw new Error('Lesson route parameters are missing.')
+  }, [id, courseId, moduleIndex, lessonIndex, getAccessTokenSilently, isNestedRoute, fallbackLesson])
 
   if (loading) {
-    return <LoadingSpinner label="Loading lesson..." />
+    return (
+      <section className="page">
+        <LoadingSpinner label="Loading lesson..." />
+      </section>
+    )
   }
 
   return (
     <section className="page">
-      {error ? <ErrorMessage message={`${error}. Displaying fallback lesson preview.`} /> : null}
+      {error ? <ErrorMessage message={`${error}. Showing fallback lesson preview.`} /> : null}
       <LessonRenderer
         title={lesson?.title}
         objectives={lesson?.objectives || []}
