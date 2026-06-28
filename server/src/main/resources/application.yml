@@ -23,6 +23,14 @@ auth0:
   issuer: ${AUTH0_ISSUER:https://example.auth0.com/}
   audience: ${AUTH0_AUDIENCE:https://learnforge-api}
 
+ai:
+  provider: ${AI_PROVIDER:template}
+  openai:
+    api-key: ${OPENAI_API_KEY:}
+    model: ${OPENAI_MODEL:gpt-4o-mini}
+    base-url: ${OPENAI_BASE_URL:https://api.openai.com/v1/chat/completions}
+    temperature: ${OPENAI_TEMPERATURE:0.3}
+
 management:
   endpoints:
     web:

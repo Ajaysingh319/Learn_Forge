@@ -46,6 +46,32 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<ApiErrorResponse> handleBadRequest(
+            BadRequestException ex,
+            HttpServletRequest request
+    ) {
+        return buildError(
+                request,
+                HttpStatus.BAD_REQUEST,
+                ex.getMessage(),
+                List.of()
+        );
+    }
+
+    @ExceptionHandler(AiGenerationException.class)
+    public ResponseEntity<ApiErrorResponse> handleAiGeneration(
+            AiGenerationException ex,
+            HttpServletRequest request
+    ) {
+        return buildError(
+                request,
+                HttpStatus.BAD_GATEWAY,
+                ex.getMessage(),
+                List.of()
+        );
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorResponse> handleUnhandled(
             Exception ex,
