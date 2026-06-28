@@ -32,6 +32,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/health").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/youtube").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/courses").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/courses/save-outline").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/courses/my").authenticated()

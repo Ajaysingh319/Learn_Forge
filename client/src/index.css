@@ -293,6 +293,34 @@ button:disabled {
   font-weight: 600;
 }
 
+.video-embed {
+  width: 100%;
+  min-height: 260px;
+  border: 0;
+  border-radius: 0.5rem;
+  background: #0f172a;
+}
+
+.video-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.video-meta span {
+  color: #64748b;
+  font-size: 0.875rem;
+}
+
+.video-list {
+  list-style: disc;
+  margin: 0.25rem 0 0 1rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
 .block-mcq {
   border: 1px solid #e2e8f0;
   border-radius: 0.5rem;

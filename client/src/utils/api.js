@@ -23,6 +23,16 @@ export async function fetchHealth() {
   return response.json()
 }
 
+export async function fetchYoutubeVideos(query) {
+  const response = await fetch(
+    `${API_BASE_URL}/api/youtube?query=${encodeURIComponent(query)}`,
+  )
+  if (!response.ok) {
+    throw new Error(`YouTube request failed: ${response.status}`)
+  }
+  return response.json()
+}
+
 export async function generateCourse(topic, getAccessTokenSilently) {
   return authFetch('/api/ai/generate-course', getAccessTokenSilently, {
     method: 'POST',
