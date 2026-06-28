@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { useParams } from 'react-router-dom'
 import ErrorMessage from '../components/ErrorMessage'
+import HinglishAudioPanel from '../components/HinglishAudioPanel'
 import LessonRenderer from '../components/LessonRenderer'
 import LoadingSpinner from '../components/LoadingSpinner'
 import useAuth from '../hooks/useAuth'
@@ -127,6 +128,7 @@ function LessonPage() {
         objectives={lesson?.objectives || []}
         content={lesson?.content || []}
       />
+      <HinglishAudioPanel lesson={lesson} />
     </section>
   )
 }

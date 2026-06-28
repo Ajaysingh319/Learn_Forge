@@ -41,6 +41,22 @@ export async function generateCourse(topic, getAccessTokenSilently) {
   })
 }
 
+export async function translateToHinglish(text, getAccessTokenSilently) {
+  return authFetch('/api/ai/translate-hinglish', getAccessTokenSilently, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text }),
+  })
+}
+
+export async function generateSpeech(text, getAccessTokenSilently, voiceName) {
+  return authFetch('/api/ai/tts', getAccessTokenSilently, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text, voiceName }),
+  })
+}
+
 export async function saveGeneratedOutline(outline, getAccessTokenSilently) {
   return authFetch('/api/courses/save-outline', getAccessTokenSilently, {
     method: 'POST',

@@ -37,6 +37,12 @@ youtube:
   max-results: ${YOUTUBE_MAX_RESULTS:3}
   cache-ttl-seconds: ${YOUTUBE_CACHE_TTL_SECONDS:600}
 
+gemini:
+  api-key: ${GEMINI_API_KEY:}
+  text-model: ${GEMINI_TEXT_MODEL:gemini-1.5-flash}
+  tts-voice-name: ${GEMINI_TTS_VOICE_NAME:Kore}
+  base-url: ${GEMINI_BASE_URL:https://generativelanguage.googleapis.com/v1beta/models}
+
 management:
   endpoints:
     web:
