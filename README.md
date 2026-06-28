@@ -1,47 +1,113 @@
-# Text-to-Learn (LearnForge)
+# LearnForge (Text-to-Learn)
 
-AI-powered course generator that turns a free-form topic prompt into a structured learning path with modules, lessons, rich content blocks, video suggestions, multilingual support, and PDF export.
+AI-powered full-stack web app that turns any topic prompt into a structured online course with modules, lessons, interactive quizzes, video suggestions, Hinglish explanations, and PDF export.
 
-## Monorepo Layout
+**Live stack:** React + Vite · Spring Boot · MongoDB · Auth0 · OpenAI/Gemini · YouTube Data API
+
+---
+
+## Features
+
+| Feature | Description |
+| --- | --- |
+| **Prompt → Course** | Generate a course outline (3–6 modules, 3–5 lessons each) from a free-form topic |
+| **Rich lesson viewer** | Render heading, paragraph, code, video, and MCQ blocks from structured JSON |
+| **Auth0 login** | Secure SPA login with JWT-protected backend APIs |
+| **Persistent courses** | Save and retrieve user-linked courses in MongoDB |
+| **YouTube integration** | Fetch and embed recommended videos from lesson search queries |
+| **Hinglish + TTS** | Generate student-friendly Hinglish explanations and audio narration |
+| **PDF export** | Download lessons as print-ready PDFs via html2canvas + jsPDF |
+| **UX polish** | Skeleton loaders, toasts, retries, input validation, responsive layout |
+
+---
+
+## Architecture
+
+```text
+┌─────────────────┐     HTTPS/JWT      ┌──────────────────────┐
+│  React + Vite   │ ◄────────────────► │  Spring Boot API     │
+│  (Vercel)       │                    │  (Render + Docker)   │
+└────────┬────────┘                    └──────────┬───────────┘
+         │                                        │
+    Auth0 SPA SDK                          Spring Security
+         │                                        │
+         ▼                                        ▼
+┌─────────────────┐                    ┌──────────────────────┐
+│  Auth0 Tenant   │                    │  MongoDB Atlas       │
+└─────────────────┘                    └──────────────────────┘
+                                                  │
+                              ┌───────────────────┼───────────────────┐
+                              ▼                   ▼                   ▼
+                         OpenAI/Gemini      YouTube API v3      Template AI
+```
+
+### Data model
+
+```text
+Course → Module → Lesson
+```
+
+Each **Lesson** stores objectives and a JSON array of content blocks (`heading`, `paragraph`, `code`, `video`, `mcq`).
+
+### Monorepo layout
 
 ```text
 LearnForge/
-├── client/   # React + Vite frontend
-├── server/   # Spring Boot backend
-└── docs/     # Planning and execution roadmap
+├── client/          # React frontend (Vite)
+│   ├── src/
+│   │   ├── components/   # UI, blocks, PDF exporter
+│   │   ├── pages/        # Home, Course, Lesson
+│   │   ├── hooks/        # useAuth, useAsync
+│   │   ├── context/      # App, Toast, Auth0
+│   │   └── utils/        # API client, validation, routes
+│   └── vercel.json
+├── server/          # Spring Boot backend
+│   ├── src/main/java/com/learnforge/server/
+│   │   ├── controller/   # REST endpoints
+│   │   ├── service/      # AI, courses, YouTube, multilingual
+│   │   ├── repository/   # MongoDB repositories
+│   │   ├── security/     # Auth0 JWT validation
+│   │   └── dto/          # Request/response models
+│   └── Dockerfile
+├── docs/
+│   ├── roadmap.md
+│   ├── deployment.md
+│   ├── demo-script.md
+│   └── resume-bullets.md
+└── render.yaml
 ```
 
-## Tech Stack (Spring Boot + React)
+---
 
-- Frontend: React, Vite, React Router (UI framework to be added in later chunks)
-- Backend: Spring Boot, Spring Security (Auth0 JWT), Spring Data MongoDB
-- AI/Text Generation: Gemini/OpenAI/Hugging Face via backend service layer
-- Integrations: YouTube Data API, PDF generation, multilingual translation + TTS
-- Deployment: Vercel (client) + Render (server)
-- Workflow: GitHub feature branches, PR-first commits, CI/CD via GitHub Actions
+## Quick start (local)
 
-## Hackathon Core Goal
+### Prerequisites
 
-Input a topic such as `Intro to React Hooks` and generate:
+- Node.js 20+
+- Java 21+
+- MongoDB (local or Atlas)
+- Auth0 tenant with SPA + API configured
 
-- Course title and description
-- 3-6 modules with 3-5 lessons each
-- Per-lesson objectives, key topics, references, MCQs, and optional code/video blocks
-- Persistent storage for generated content
-- A navigable frontend experience for browsing and learning
+### 1. Clone and configure env
 
-## Chunked Delivery Plan
+```bash
+git clone https://github.com/Ajaysingh319/Learn_Forge.git
+cd Learn_Forge
 
-The full implementation is split into clean development chunks to keep commit history readable and interview-friendly.
+cp server/.env.example server/.env    # fill in values
+cp client/.env.example client/.env    # fill in values
+```
 
-- Chunk 1 (current): monorepo bootstrap + initial docs + base scaffolding
-- Chunk 2+: backend foundation, frontend routing, Auth0, AI pipelines, rendering, integrations, deployment, and final showcase docs
+### 2. Start the backend
 
-See `docs/roadmap.md` for the complete milestone-to-implementation plan.
+```bash
+cd server
+./mvnw spring-boot:run
+```
 
-## Local Setup (after Chunk 1)
+API runs at `http://localhost:8080`. Health check: `GET /api/health`.
 
-### Client
+### 3. Start the frontend
 
 ```bash
 cd client
@@ -49,14 +115,99 @@ npm install
 npm run dev
 ```
 
-### Server
+App runs at `http://localhost:5173`.
+
+### 4. Run tests
 
 ```bash
-cd server
-./mvnw spring-boot:run
+# Frontend
+cd client && npm test && npm run lint && npm run build
+
+# Backend (requires Java 21 + MongoDB)
+cd server && ./mvnw test
 ```
 
-## Notes
+---
 
-- This repository intentionally follows incremental chunk delivery.
-- No commits are auto-created by the setup process; commits should be done chunk-by-chunk manually.
+## Environment variables
+
+### Backend (`server/.env`)
+
+| Variable | Description |
+| --- | --- |
+| `MONGO_URI` | MongoDB connection string |
+| `AUTH0_ISSUER` | Auth0 issuer URL |
+| `AUTH0_AUDIENCE` | Auth0 API audience |
+| `CORS_ALLOWED_ORIGINS` | Frontend origin(s), comma-separated |
+| `AI_PROVIDER` | `template`, `openai`, or `gemini` |
+| `OPENAI_API_KEY` | Required when `AI_PROVIDER=openai` |
+| `GEMINI_API_KEY` | Required when `AI_PROVIDER=gemini` |
+| `YOUTUBE_API_KEY` | YouTube Data API key for video blocks |
+
+See `server/.env.example` for the full list.
+
+### Frontend (`client/.env`)
+
+| Variable | Description |
+| --- | --- |
+| `VITE_API_URL` | Backend base URL |
+| `VITE_AUTH0_DOMAIN` | Auth0 tenant domain |
+| `VITE_AUTH0_CLIENT_ID` | Auth0 SPA client ID |
+| `VITE_AUTH0_AUDIENCE` | Must match backend audience |
+
+---
+
+## API overview
+
+| Method | Endpoint | Auth | Description |
+| --- | --- | --- | --- |
+| `GET` | `/api/health` | Public | Service health |
+| `GET` | `/api/auth/me` | JWT | Current user claims |
+| `POST` | `/api/ai/generate-course` | JWT | Generate course outline |
+| `POST` | `/api/ai/generate-lesson` | JWT | Generate lesson content |
+| `POST` | `/api/ai/translate-hinglish` | JWT | Hinglish translation |
+| `POST` | `/api/ai/tts` | JWT | Text-to-speech audio |
+| `POST` | `/api/courses/save-outline` | JWT | Persist generated outline |
+| `GET` | `/api/courses/my` | JWT | List user's course summaries |
+| `GET` | `/api/courses/{id}` | JWT | Fetch full course |
+| `GET` | `/api/youtube?query=...` | Public | YouTube search results |
+
+---
+
+## User flow
+
+1. **Home (`/`)** — Enter a topic, generate and save a course (login required).
+2. **Course (`/course/:id`)** — Browse modules and lesson links.
+3. **Lesson (`/courses/:courseId/module/:m/lesson/:l`)** — Read content, take MCQs, watch videos, export PDF, generate Hinglish/audio.
+
+---
+
+## Deployment
+
+Production deployment uses **Render** (backend) + **Vercel** (frontend) + **MongoDB Atlas**.
+
+Full instructions: [`docs/deployment.md`](docs/deployment.md)
+
+---
+
+## Demo script
+
+5-minute walkthrough for interviews and hackathon demos: [`docs/demo-script.md`](docs/demo-script.md)
+
+---
+
+## Resume bullets
+
+Copy-ready technical highlights: [`docs/resume-bullets.md`](docs/resume-bullets.md)
+
+---
+
+## Development history
+
+The project was built in 17 incremental chunks for clean git history. See [`docs/roadmap.md`](docs/roadmap.md) for the full milestone plan.
+
+---
+
+## License
+
+MIT (or update as needed for your submission).
