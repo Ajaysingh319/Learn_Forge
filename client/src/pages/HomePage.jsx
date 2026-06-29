@@ -28,7 +28,7 @@ function HomePage() {
     setCoursesError('')
     try {
       const data = await fetchMyCourses(getAccessTokenSilently)
-      setCourses(data)
+      setCourses(Array.isArray(data) ? data.filter(Boolean) : [])
     } catch (err) {
       setCoursesError(err.message || 'Failed to load saved courses')
     } finally {
@@ -53,10 +53,18 @@ function HomePage() {
     setGenerateError('')
     try {
       const outline = await generateCourse(topic, getAccessTokenSilently)
+      if (!outline?.title || !Array.isArray(outline?.modules) || outline.modules.length === 0) {
+        throw new Error('Course generation returned an invalid outline. Please try again.')
+      }
+
       const saved = await saveGeneratedOutline(outline, getAccessTokenSilently)
+      if (!saved?.id && !saved?.title) {
+        throw new Error('Course was generated but failed to save. Check that the backend is running.')
+      }
       const updatedCourses = await fetchMyCourses(getAccessTokenSilently)
-      setCourses(updatedCourses)
-      pushToast(`Course "${saved.title || outline.title}" saved successfully.`, 'success')
+      setCourses(Array.isArray(updatedCourses) ? updatedCourses.filter(Boolean) : [])
+      const courseTitle = saved?.title || outline.title || topic
+      pushToast(`Course "${courseTitle}" saved successfully.`, 'success')
     } catch (err) {
       const message = err.message || 'Failed to generate and save course'
       setGenerateError(message)
@@ -100,8 +108,8 @@ function HomePage() {
         {!loadingCourses && courses.length > 0 ? (
           <ul className="course-list">
             {courses.map((course) => (
-              <li key={course.id}>
-                <Link to={`/course/${course.id}`}>{course.title}</Link>
+              <li key={course?.id || course?.title}>
+                <Link to={`/course/${course.id}`}>{course?.title || 'Untitled course'}</Link>
                 <span>
                   {course.moduleCount} modules · {course.lessonCount} lessons
                 </span>

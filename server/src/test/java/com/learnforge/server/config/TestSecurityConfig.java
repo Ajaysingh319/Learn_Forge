@@ -12,10 +12,9 @@ public class TestSecurityConfig {
 
     @Bean
     JwtDecoder jwtDecoder() {
-        return token -> Jwt.withBearerAuth("test-token")
+        return token -> Jwt.withTokenValue(token != null && !token.isBlank() ? token : "test-token")
                 .header("alg", "none")
-                .subject("test-user")
-                .claim("scope", "openid")
+                .claim("sub", "test-user")
                 .build();
     }
 }

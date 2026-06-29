@@ -77,7 +77,14 @@ public class GeminiClientService {
                     aiProperties.getMaxRetries() + 1
             );
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
-                throw new AiGenerationException("Gemini request failed with status " + response.statusCode());
+                String detail = response.body();
+                if (detail != null && detail.length() > 240) {
+                    detail = detail.substring(0, 240) + "...";
+                }
+                throw new AiGenerationException(
+                        "Gemini request failed with status " + response.statusCode()
+                                + (detail == null || detail.isBlank() ? "" : ": " + detail)
+                );
             }
             return extractText(response.body());
         } catch (InterruptedException ex) {

@@ -16,6 +16,8 @@ import java.util.List;
 import java.util.Map;
 import com.learnforge.server.util.HttpRetryHelper;
 import org.springframework.stereotype.Service;
+
+@Service
 public class OpenAiClientService {
 
     private static final TypeReference<Map<String, Object>> MAP_TYPE = new TypeReference<Map<String, Object>>() {

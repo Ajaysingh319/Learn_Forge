@@ -24,29 +24,31 @@ function CoursePage() {
       isEmpty={!loading && !error && !course}
       emptyMessage="Course not found."
     >
-      <section className="page">
-        <header className="page-header">
-          <h1>{course.title}</h1>
-          <p>{course.description}</p>
-        </header>
+      {course ? (
+        <section className="page">
+          <header className="page-header">
+            <h1>{course.title || 'Untitled course'}</h1>
+            <p>{course.description || ''}</p>
+          </header>
 
-        {course.modules?.map((module, moduleIndex) => (
-          <section key={module.id} className="card">
-            <h2>
-              Module {moduleIndex + 1}: {module.title}
-            </h2>
-            <ul className="course-list">
-              {module.lessons?.map((lesson, lessonIndex) => (
-                <li key={lesson.id}>
-                  <Link to={lessonPath(course.id, moduleIndex, lessonIndex)}>
-                    Lesson {lessonIndex + 1}: {lesson.title}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </section>
-        ))}
-      </section>
+          {course.modules?.filter(Boolean).map((module, moduleIndex) => (
+            <section key={module.id || module.title} className="card">
+              <h2>
+                Module {moduleIndex + 1}: {module?.title || 'Untitled module'}
+              </h2>
+              <ul className="course-list">
+                {module.lessons?.filter(Boolean).map((lesson, lessonIndex) => (
+                  <li key={lesson.id || `${moduleIndex}-${lessonIndex}`}>
+                    <Link to={lessonPath(course.id, moduleIndex, lessonIndex)}>
+                      Lesson {lessonIndex + 1}: {lesson?.title || 'Untitled lesson'}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))}
+        </section>
+      ) : null}
     </PageState>
   )
 }

@@ -6,7 +6,7 @@ const auth0Audience = import.meta.env.VITE_AUTH0_AUDIENCE || ''
 
 function AuthProviderWrapper({ children }) {
   const authorizationParams = {
-    redirect_uri: window.location.origin,
+    redirect_uri: `${window.location.origin}/`,
   }
 
   if (auth0Audience) {

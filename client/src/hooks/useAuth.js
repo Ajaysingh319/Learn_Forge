@@ -17,7 +17,7 @@ function useAuth() {
     login: () => loginWithRedirect(),
     logout: () =>
       logout({
-        logoutParams: { returnTo: window.location.origin },
+        logoutParams: { returnTo: `${window.location.origin}/` },
       }),
     getAccessTokenSilently,
   }
