@@ -132,6 +132,7 @@ public class CourseResponse {
         private String title;
         private List<String> objectives = new ArrayList<>();
         private List<Map<String, Object>> content = new ArrayList<>();
+        private List<Map<String, Object>> resources = new ArrayList<>();
         private boolean enriched;
         private Instant createdAt;
         private Instant updatedAt;
@@ -166,6 +167,14 @@ public class CourseResponse {
 
         public void setContent(List<Map<String, Object>> content) {
             this.content = content;
+        }
+
+        public List<Map<String, Object>> getResources() {
+            return resources;
+        }
+
+        public void setResources(List<Map<String, Object>> resources) {
+            this.resources = resources;
         }
 
         public boolean isEnriched() {

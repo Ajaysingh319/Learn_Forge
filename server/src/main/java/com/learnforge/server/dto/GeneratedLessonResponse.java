@@ -18,6 +18,9 @@ public class GeneratedLessonResponse {
     @NotEmpty(message = "content blocks are required")
     private List<Map<String, Object>> content = new ArrayList<>();
 
+    @NotEmpty(message = "resources are required")
+    private List<Map<String, Object>> resources = new ArrayList<>();
+
     public String getTitle() {
         return title;
     }
@@ -40,5 +43,13 @@ public class GeneratedLessonResponse {
 
     public void setContent(List<Map<String, Object>> content) {
         this.content = content;
+    }
+
+    public List<Map<String, Object>> getResources() {
+        return resources;
+    }
+
+    public void setResources(List<Map<String, Object>> resources) {
+        this.resources = resources;
     }
 }

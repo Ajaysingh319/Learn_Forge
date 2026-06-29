@@ -63,6 +63,16 @@ function buildSampleLesson(label) {
         explanation: 'The AI lesson pipeline targets 4 to 5 MCQs at the end of each lesson.',
       },
     ],
+    resources: [
+      {
+        title: 'Official documentation for this topic',
+        url: 'https://developer.mozilla.org/',
+      },
+      {
+        title: 'Further reading and tutorials',
+        url: 'https://www.google.com/search?q=learn+this+topic',
+      },
+    ],
   }
 }
 
@@ -130,12 +140,14 @@ function LessonPage() {
           title={lesson?.title}
           objectives={lesson?.objectives || []}
           content={lesson?.content || []}
+          resources={lesson?.resources || []}
         />
       </div>
       <LessonRenderer
         title={lesson?.title}
         objectives={lesson?.objectives || []}
         content={lesson?.content || []}
+        resources={lesson?.resources || []}
       />
       <HinglishAudioPanel lesson={lesson} />
     </section>

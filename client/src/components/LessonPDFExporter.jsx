@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import { exportLessonPdf } from '../utils/exportLessonPdf'
 import LessonPdfContent from './LessonPdfContent'
 
-function LessonPDFExporter({ title, objectives = [], content = [] }) {
+function LessonPDFExporter({ title, objectives = [], content = [], resources = [] }) {
   const captureRef = useRef(null)
   const [exporting, setExporting] = useState(false)
   const [error, setError] = useState('')
@@ -35,7 +35,12 @@ function LessonPDFExporter({ title, objectives = [], content = [] }) {
 
       <div className="lesson-pdf-capture" aria-hidden="true">
         <div ref={captureRef}>
-          <LessonPdfContent title={title} objectives={objectives} content={content} />
+          <LessonPdfContent
+            title={title}
+            objectives={objectives}
+            content={content}
+            resources={resources}
+          />
         </div>
       </div>
     </div>

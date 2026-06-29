@@ -67,7 +67,7 @@ function renderPdfBlock(block, index) {
   }
 }
 
-function LessonPdfContent({ title, objectives = [], content = [] }) {
+function LessonPdfContent({ title, objectives = [], content = [], resources = [] }) {
   return (
     <article className="lesson-pdf-document">
       <header className="lesson-pdf-header">
@@ -89,6 +89,20 @@ function LessonPdfContent({ title, objectives = [], content = [] }) {
       <section className="lesson-pdf-content">
         {content.map((block, index) => renderPdfBlock(block, index))}
       </section>
+
+      {resources.length > 0 ? (
+        <section className="lesson-pdf-resources">
+          <h2>Suggested readings &amp; resources</h2>
+          <ul>
+            {resources.map((resource, index) => (
+              <li key={`pdf-resource-${index}`}>
+                {resource?.title || 'Resource'}
+                {resource?.url ? ` — ${resource.url}` : ''}
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
     </article>
   )
 }

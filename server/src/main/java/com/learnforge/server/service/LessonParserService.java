@@ -47,7 +47,22 @@ public class LessonParserService {
 
         validateContentBlocks(response.getContent());
         validateMcqCount(response.getContent());
+        validateResources(response.getResources());
         return response;
+    }
+
+    private void validateResources(List<Map<String, Object>> resources) {
+        for (int i = 0; i < resources.size(); i++) {
+            Map<String, Object> resource = resources.get(i);
+            Object titleObj = resource.get("title");
+            if (!(titleObj instanceof String) || ((String) titleObj).trim().isEmpty()) {
+                throw new BadRequestException("Resource " + (i + 1) + " is missing a title");
+            }
+            Object urlObj = resource.get("url");
+            if (!(urlObj instanceof String) || ((String) urlObj).trim().isEmpty()) {
+                throw new BadRequestException("Resource " + (i + 1) + " is missing a url");
+            }
+        }
     }
 
     private void validateContentBlocks(List<Map<String, Object>> content) {

@@ -368,6 +368,20 @@ button:disabled {
   padding-left: 1.25rem;
 }
 
+.lesson-resources {
+  border-top: 1px solid var(--border, #e2e8f0);
+  padding-top: 1rem;
+}
+
+.lesson-resources ul {
+  margin: 0.5rem 0 0;
+  padding-left: 1.25rem;
+}
+
+.lesson-resources a {
+  word-break: break-word;
+}
+
 .lesson-content {
   display: flex;
   flex-direction: column;
@@ -619,6 +633,20 @@ button:disabled {
 }
 
 .lesson-pdf-objectives ul {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.lesson-pdf-resources {
+  margin-top: 1.5rem;
+}
+
+.lesson-pdf-resources h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.125rem;
+}
+
+.lesson-pdf-resources ul {
   margin: 0;
   padding-left: 1.25rem;
 }

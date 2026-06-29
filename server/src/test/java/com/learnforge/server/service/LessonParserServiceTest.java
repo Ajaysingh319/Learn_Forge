@@ -37,6 +37,10 @@ class LessonParserServiceTest {
                     {"type": "mcq", "question": "Q2?", "options": ["A", "B"], "answer": 0, "explanation": "Because A."},
                     {"type": "mcq", "question": "Q3?", "options": ["A", "B"], "answer": 1, "explanation": "Because B."},
                     {"type": "mcq", "question": "Q4?", "options": ["A", "B"], "answer": 0, "explanation": "Because A."}
+                  ],
+                  "resources": [
+                    {"title": "React Hooks docs", "url": "https://react.dev/reference/react"},
+                    {"title": "useState guide", "url": "https://react.dev/reference/react/useState"}
                   ]
                 }
                 """;
@@ -45,6 +49,7 @@ class LessonParserServiceTest {
 
         assertEquals("Intro to Hooks", response.getTitle());
         assertEquals(8, response.getContent().size());
+        assertEquals(2, response.getResources().size());
     }
 
     @Test
@@ -56,6 +61,9 @@ class LessonParserServiceTest {
                   "content": [
                     {"type": "heading", "text": "Overview"},
                     {"type": "mcq", "question": "Q1?", "options": ["A", "B"], "answer": 0, "explanation": "A"}
+                  ],
+                  "resources": [
+                    {"title": "Reference", "url": "https://example.com/docs"}
                   ]
                 }
                 """;
@@ -76,6 +84,9 @@ class LessonParserServiceTest {
                   "objectives": ["Learn something"],
                   "content": [
                     {"type": "quiz", "text": "Unsupported"}
+                  ],
+                  "resources": [
+                    {"title": "Reference", "url": "https://example.com/docs"}
                   ]
                 }
                 """;
@@ -86,5 +97,56 @@ class LessonParserServiceTest {
         );
 
         assertEquals("Content block 1 has unsupported type: quiz", ex.getMessage());
+    }
+
+    @Test
+    void parseAndValidate_rejectsMissingResources() {
+        String json = """
+                {
+                  "title": "No Resources",
+                  "objectives": ["Learn something"],
+                  "content": [
+                    {"type": "heading", "text": "Overview"},
+                    {"type": "mcq", "question": "Q1?", "options": ["A", "B"], "answer": 0, "explanation": "A"},
+                    {"type": "mcq", "question": "Q2?", "options": ["A", "B"], "answer": 1, "explanation": "B"},
+                    {"type": "mcq", "question": "Q3?", "options": ["A", "B"], "answer": 0, "explanation": "A"},
+                    {"type": "mcq", "question": "Q4?", "options": ["A", "B"], "answer": 1, "explanation": "B"}
+                  ]
+                }
+                """;
+
+        BadRequestException ex = assertThrows(
+                BadRequestException.class,
+                () -> parserService.parseAndValidate(json)
+        );
+
+        org.junit.jupiter.api.Assertions.assertTrue(ex.getMessage().contains("resources"));
+    }
+
+    @Test
+    void parseAndValidate_rejectsResourceWithoutUrl() {
+        String json = """
+                {
+                  "title": "Bad Resource",
+                  "objectives": ["Learn something"],
+                  "content": [
+                    {"type": "heading", "text": "Overview"},
+                    {"type": "mcq", "question": "Q1?", "options": ["A", "B"], "answer": 0, "explanation": "A"},
+                    {"type": "mcq", "question": "Q2?", "options": ["A", "B"], "answer": 1, "explanation": "B"},
+                    {"type": "mcq", "question": "Q3?", "options": ["A", "B"], "answer": 0, "explanation": "A"},
+                    {"type": "mcq", "question": "Q4?", "options": ["A", "B"], "answer": 1, "explanation": "B"}
+                  ],
+                  "resources": [
+                    {"title": "Missing URL"}
+                  ]
+                }
+                """;
+
+        BadRequestException ex = assertThrows(
+                BadRequestException.class,
+                () -> parserService.parseAndValidate(json)
+        );
+
+        assertEquals("Resource 1 is missing a url", ex.getMessage());
     }
 }

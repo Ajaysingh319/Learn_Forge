@@ -64,6 +64,7 @@ public class CourseServiceImpl implements CourseService {
                 lesson.setTitle(lessonPayload.getTitle());
                 lesson.setObjectives(new ArrayList<>(safeList(lessonPayload.getObjectives())));
                 lesson.setContent(new ArrayList<>(safeList(lessonPayload.getContent())));
+                lesson.setResources(new ArrayList<>(safeList(lessonPayload.getResources())));
                 lesson.setEnriched(lessonPayload.isEnriched());
                 lesson.setModuleId(module.getId());
                 lesson.setCreatedAt(now);
@@ -190,6 +191,7 @@ public class CourseServiceImpl implements CourseService {
                 lessonResponse.setTitle(lesson.getTitle());
                 lessonResponse.setObjectives(new ArrayList<>(safeList(lesson.getObjectives())));
                 lessonResponse.setContent(new ArrayList<>(safeList(lesson.getContent())));
+                lessonResponse.setResources(new ArrayList<>(safeList(lesson.getResources())));
                 lessonResponse.setEnriched(lesson.isEnriched());
                 lessonResponse.setCreatedAt(lesson.getCreatedAt());
                 lessonResponse.setUpdatedAt(lesson.getUpdatedAt());

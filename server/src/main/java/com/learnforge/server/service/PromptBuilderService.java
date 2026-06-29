@@ -49,6 +49,9 @@ public class PromptBuilderService {
         prompt.append("    { \"type\": \"code\", \"language\": \"string\", \"text\": \"string\" },\n");
         prompt.append("    { \"type\": \"video\", \"query\": \"string\" },\n");
         prompt.append("    { \"type\": \"mcq\", \"question\": \"string\", \"options\": [\"A\", \"B\", \"C\", \"D\"], \"answer\": 0, \"explanation\": \"string\" }\n");
+        prompt.append("  ],\n");
+        prompt.append("  \"resources\": [\n");
+        prompt.append("    { \"title\": \"string\", \"url\": \"string\" }\n");
         prompt.append("  ]\n");
         prompt.append("}\n\n");
         prompt.append("Rules:\n");
@@ -57,6 +60,8 @@ public class PromptBuilderService {
         prompt.append("- Video blocks must use a search query in the \"query\" field, not a direct URL.\n");
         prompt.append("- Include 4 to 5 MCQ blocks at the end of the content array.\n");
         prompt.append("- Each MCQ must include question, options, answer index, and explanation.\n");
+        prompt.append("- Include 2 to 4 suggested readings or external links in the \"resources\" array.\n");
+        prompt.append("- Each resource must include a descriptive title and a valid https URL.\n");
         prompt.append("- Keep explanations concise and educational.\n");
         return prompt.toString();
     }

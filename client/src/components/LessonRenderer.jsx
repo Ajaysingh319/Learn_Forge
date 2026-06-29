@@ -44,7 +44,35 @@ function renderBlock(block, index) {
   }
 }
 
-function LessonRenderer({ title, objectives = [], content = [] }) {
+function ResourcesSection({ resources }) {
+  if (!resources || resources.length === 0) {
+    return null
+  }
+
+  return (
+    <div className="lesson-resources">
+      <h3>Suggested readings &amp; resources</h3>
+      <ul>
+        {resources.map((resource, index) => {
+          const label = resource?.title || resource?.url || 'Resource'
+          return (
+            <li key={`resource-${index}`}>
+              {resource?.url ? (
+                <a href={resource.url} target="_blank" rel="noreferrer">
+                  {label}
+                </a>
+              ) : (
+                label
+              )}
+            </li>
+          )
+        })}
+      </ul>
+    </div>
+  )
+}
+
+function LessonRenderer({ title, objectives = [], content = [], resources = [] }) {
   if (content.length === 0) {
     return (
       <section className="card">
@@ -76,6 +104,8 @@ function LessonRenderer({ title, objectives = [], content = [] }) {
           </article>
         ))}
       </div>
+
+      <ResourcesSection resources={resources} />
     </section>
   )
 }

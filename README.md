@@ -16,6 +16,7 @@ AI-powered full-stack web app that turns any topic prompt into a structured onli
 | **Persistent courses** | Save and retrieve user-linked courses in MongoDB |
 | **YouTube integration** | Fetch and embed recommended videos from lesson search queries |
 | **Hinglish + TTS** | Generate student-friendly Hinglish explanations and audio narration |
+| **Suggested resources** | Each lesson includes a list of suggested readings / external links |
 | **PDF export** | Download lessons as print-ready PDFs via html2canvas + jsPDF |
 | **UX polish** | Skeleton loaders, toasts, retries, input validation, responsive layout |
 
@@ -47,7 +48,7 @@ AI-powered full-stack web app that turns any topic prompt into a structured onli
 Course → Module → Lesson
 ```
 
-Each **Lesson** stores objectives and a JSON array of content blocks (`heading`, `paragraph`, `code`, `video`, `mcq`).
+Each **Lesson** stores objectives, a JSON array of content blocks (`heading`, `paragraph`, `code`, `video`, `mcq`), and a `resources` list of suggested readings / external links (`{ title, url }`).
 
 ### Monorepo layout
 
@@ -187,6 +188,15 @@ See `server/.env.example` for the full list.
 Production deployment uses **Render** (backend) + **Vercel** (frontend) + **MongoDB Atlas**.
 
 Full instructions: [`docs/deployment.md`](docs/deployment.md)
+
+### CI/CD
+
+GitHub Actions ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs on every push and pull request to `main`:
+
+- **Client** — `npm ci` → lint → test → build
+- **Server** — JDK 21 → `./mvnw verify` (compile + tests)
+
+Render (backend) and Vercel (frontend) auto-deploy from `main` once CI passes.
 
 ---
 

@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.learnforge.server.dto.GeneratedLessonResponse;
 import com.learnforge.server.exception.AiGenerationException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -65,6 +67,18 @@ public class TemplateLessonProvider {
 
         lesson.setContent(content);
 
+        List<Map<String, Object>> resources = new ArrayList<Map<String, Object>>();
+        resources.add(resource(
+                lessonTitle + " — overview on Wikipedia",
+                "https://en.wikipedia.org/w/index.php?search=" + encode(lessonTitle)));
+        resources.add(resource(
+                "Further reading: " + lessonTitle,
+                "https://www.google.com/search?q=" + encode(lessonTitle + " tutorial")));
+        resources.add(resource(
+                "Video lectures on " + moduleTitle,
+                "https://www.youtube.com/results?search_query=" + encode(moduleTitle + " " + lessonTitle)));
+        lesson.setResources(resources);
+
         try {
             return objectMapper.writeValueAsString(lesson);
         } catch (JsonProcessingException ex) {
@@ -102,6 +116,17 @@ public class TemplateLessonProvider {
         block.put("answer", answer);
         block.put("explanation", explanation);
         return block;
+    }
+
+    private Map<String, Object> resource(String title, String url) {
+        Map<String, Object> resource = new HashMap<String, Object>();
+        resource.put("title", title);
+        resource.put("url", url);
+        return resource;
+    }
+
+    private String encode(String value) {
+        return URLEncoder.encode(value == null ? "" : value, StandardCharsets.UTF_8);
     }
 
     private String sanitize(String value) {
