@@ -5,6 +5,7 @@ import com.learnforge.server.dto.CourseSummaryResponse;
 import com.learnforge.server.dto.CreateCourseRequest;
 import com.learnforge.server.dto.GeneratedCourseOutlineResponse;
 import com.learnforge.server.service.CourseService;
+import com.learnforge.server.service.LessonPrewarmService;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.HttpStatus;
@@ -24,9 +25,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class CourseController {
 
     private final CourseService courseService;
+    private final LessonPrewarmService lessonPrewarmService;
 
-    public CourseController(CourseService courseService) {
+    public CourseController(CourseService courseService, LessonPrewarmService lessonPrewarmService) {
         this.courseService = courseService;
+        this.lessonPrewarmService = lessonPrewarmService;
     }
 
     @PostMapping
@@ -40,7 +43,11 @@ public class CourseController {
     @ResponseStatus(HttpStatus.CREATED)
     public CourseResponse saveGeneratedOutline(@Valid @RequestBody GeneratedCourseOutlineResponse outline,
                                                @AuthenticationPrincipal Jwt jwt) {
-        return courseService.saveGeneratedOutline(outline, jwt.getSubject());
+        CourseResponse course = courseService.saveGeneratedOutline(outline, jwt.getSubject());
+        // Build and persist all lesson content in the background so the saved course opens
+        // instantly later without regenerating.
+        lessonPrewarmService.prewarmCourse(course.getId(), jwt.getSubject());
+        return course;
     }
 
     @GetMapping("/my")

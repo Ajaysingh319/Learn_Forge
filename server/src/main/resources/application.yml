@@ -20,6 +20,13 @@ app:
   api-base-path: /api
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
+  lesson-prewarm:
+    # Off by default (quota-friendly): each lesson is generated once on first open and then
+    # persisted forever, so reopening never calls the AI again. Set LESSON_PREWARM_ENABLED=true
+    # to instead pre-build ALL lesson content in the background when a course is saved
+    # (instant opens, but ~1 AI call per lesson — needs higher AI quota/billing).
+    enabled: ${LESSON_PREWARM_ENABLED:false}
+    throttle-ms: ${LESSON_PREWARM_THROTTLE_MS:1500}
 
 auth0:
   issuer: ${AUTH0_ISSUER:https://example.auth0.com/}
