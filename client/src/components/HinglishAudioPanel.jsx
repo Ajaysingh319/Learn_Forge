@@ -3,7 +3,11 @@ import ErrorMessage from './ErrorMessage'
 import LoadingSpinner from './LoadingSpinner'
 import useAuth from '../hooks/useAuth'
 import { generateSpeech, translateToHinglish } from '../utils/api'
-import { lessonToPlainText } from '../utils/lessonText'
+import { clampText, lessonToPlainText } from '../utils/lessonText'
+
+// Backend caps translate/tts input; keep audio shorter so narration stays quick.
+const TRANSLATE_MAX_CHARS = 7000
+const AUDIO_MAX_CHARS = 3000
 
 function HinglishAudioPanel({ lesson }) {
   const { getAccessTokenSilently } = useAuth()
@@ -21,7 +25,7 @@ function HinglishAudioPanel({ lesson }) {
     setLoadingTranslation(true)
     setError('')
     try {
-      const response = await translateToHinglish(lessonText, getAccessTokenSilently)
+      const response = await translateToHinglish(clampText(lessonText, TRANSLATE_MAX_CHARS), getAccessTokenSilently)
       setHinglishText(response.text)
     } catch (err) {
       setError(err.message || 'Failed to generate Hinglish explanation')
@@ -32,7 +36,7 @@ function HinglishAudioPanel({ lesson }) {
 
   const handleAudio = useCallback(async () => {
     setLastAction('audio')
-    const textForAudio = hinglishText || lessonText
+    const textForAudio = clampText(hinglishText || lessonText, AUDIO_MAX_CHARS)
     setLoadingAudio(true)
     setError('')
     try {

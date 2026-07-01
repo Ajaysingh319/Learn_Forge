@@ -43,6 +43,7 @@ youtube:
 gemini:
   api-key: ${GEMINI_API_KEY:}
   text-model: ${GEMINI_TEXT_MODEL:gemini-2.5-flash}
+  tts-model: ${GEMINI_TTS_MODEL:gemini-2.5-flash-preview-tts}
   tts-voice-name: ${GEMINI_TTS_VOICE_NAME:Kore}
   base-url: ${GEMINI_BASE_URL:https://generativelanguage.googleapis.com/v1beta/models}
 

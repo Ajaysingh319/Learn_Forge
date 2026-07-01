@@ -6,6 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class GeminiProperties {
     private String apiKey = "";
     private String textModel = "gemini-2.5-flash";
+    private String ttsModel = "gemini-2.5-flash-preview-tts";
     private String ttsVoiceName = "Kore";
     private String baseUrl = "https://generativelanguage.googleapis.com/v1beta/models";
 
@@ -23,6 +24,14 @@ public class GeminiProperties {
 
     public void setTextModel(String textModel) {
         this.textModel = textModel;
+    }
+
+    public String getTtsModel() {
+        return ttsModel;
+    }
+
+    public void setTtsModel(String ttsModel) {
+        this.ttsModel = ttsModel;
     }
 
     public String getTtsVoiceName() {

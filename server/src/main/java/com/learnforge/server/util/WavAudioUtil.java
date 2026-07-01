@@ -25,11 +25,19 @@ public final class WavAudioUtil {
             pcm[i * 2 + 1] = (byte) ((sample >> 8) & 0xff);
         }
 
-        return withWavHeader(pcm);
+        return withWavHeader(pcm, SAMPLE_RATE);
     }
 
-    private static byte[] withWavHeader(byte[] pcm) {
-        int byteRate = SAMPLE_RATE * CHANNELS * BITS_PER_SAMPLE / 8;
+    /**
+     * Wraps raw signed 16-bit little-endian mono PCM (e.g. Gemini TTS output) in a WAV container.
+     */
+    public static byte[] pcmToWav(byte[] pcm, int sampleRate) {
+        int rate = sampleRate > 0 ? sampleRate : SAMPLE_RATE;
+        return withWavHeader(pcm, rate);
+    }
+
+    private static byte[] withWavHeader(byte[] pcm, int sampleRate) {
+        int byteRate = sampleRate * CHANNELS * BITS_PER_SAMPLE / 8;
         int blockAlign = CHANNELS * BITS_PER_SAMPLE / 8;
         int dataSize = pcm.length;
         int chunkSize = 36 + dataSize;
@@ -43,7 +51,7 @@ public final class WavAudioUtil {
             writeInt(out, 16);
             writeShort(out, (short) 1);
             writeShort(out, CHANNELS);
-            writeInt(out, SAMPLE_RATE);
+            writeInt(out, sampleRate);
             writeInt(out, byteRate);
             writeShort(out, (short) blockAlign);
             writeShort(out, BITS_PER_SAMPLE);

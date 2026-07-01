@@ -1,3 +1,17 @@
+/**
+ * Trims text to a maximum length, cutting at the last sentence/space boundary
+ * so requests stay within backend validation limits and TTS stays responsive.
+ */
+export function clampText(text, maxChars) {
+  const value = (text || '').trim()
+  if (value.length <= maxChars) {
+    return value
+  }
+  const slice = value.slice(0, maxChars)
+  const boundary = Math.max(slice.lastIndexOf('. '), slice.lastIndexOf('\n'), slice.lastIndexOf(' '))
+  return (boundary > maxChars * 0.5 ? slice.slice(0, boundary + 1) : slice).trim()
+}
+
 export function lessonToPlainText(lesson) {
   if (!lesson) {
     return ''

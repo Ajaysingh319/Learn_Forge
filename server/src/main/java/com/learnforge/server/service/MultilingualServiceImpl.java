@@ -41,10 +41,19 @@ public class MultilingualServiceImpl implements MultilingualService {
 
     @Override
     public TtsResponse generateSpeech(String text, String voiceName) {
+        String provider = aiProperties.getProvider() == null ? "template" : aiProperties.getProvider().trim().toLowerCase();
         String selectedVoice = voiceName == null || voiceName.trim().isEmpty()
                 ? geminiProperties.getTtsVoiceName()
                 : voiceName.trim();
-        byte[] wav = WavAudioUtil.generateNarrationTone(text);
+
+        byte[] wav;
+        if ("gemini".equals(provider)) {
+            GeminiClientService.AudioData audio = geminiClientService.generateSpeech(text, selectedVoice);
+            wav = WavAudioUtil.pcmToWav(audio.getPcm(), audio.getSampleRate());
+        } else {
+            // Rule-based/offline fallback: a short synthetic narration tone.
+            wav = WavAudioUtil.generateNarrationTone(text);
+        }
 
         TtsResponse response = new TtsResponse();
         response.setMimeType("audio/wav");
