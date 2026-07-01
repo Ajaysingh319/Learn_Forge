@@ -10,17 +10,20 @@ public class CourseOutlineGenerationServiceImpl implements CourseOutlineGenerati
     private final AiProperties aiProperties;
     private final PromptBuilderService promptBuilderService;
     private final OpenAiCourseOutlineProvider openAiProvider;
+    private final GeminiClientService geminiClientService;
     private final TemplateCourseOutlineProvider templateProvider;
     private final CourseOutlineParserService parserService;
 
     public CourseOutlineGenerationServiceImpl(AiProperties aiProperties,
                                               PromptBuilderService promptBuilderService,
                                               OpenAiCourseOutlineProvider openAiProvider,
+                                              GeminiClientService geminiClientService,
                                               TemplateCourseOutlineProvider templateProvider,
                                               CourseOutlineParserService parserService) {
         this.aiProperties = aiProperties;
         this.promptBuilderService = promptBuilderService;
         this.openAiProvider = openAiProvider;
+        this.geminiClientService = geminiClientService;
         this.templateProvider = templateProvider;
         this.parserService = parserService;
     }
@@ -32,6 +35,8 @@ public class CourseOutlineGenerationServiceImpl implements CourseOutlineGenerati
         String rawJson;
         if ("openai".equals(provider)) {
             rawJson = openAiProvider.generateJsonOutline(prompt);
+        } else if ("gemini".equals(provider)) {
+            rawJson = geminiClientService.generateText(prompt);
         } else {
             rawJson = templateProvider.generateJsonOutline(topic);
         }

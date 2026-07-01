@@ -16,4 +16,6 @@ public interface CourseService {
     List<CourseResponse> getCoursesByCreator(String creatorSub);
 
     List<CourseSummaryResponse> getCourseSummariesByCreator(String creatorSub);
+
+    CourseResponse.LessonResponse generateAndSaveLesson(String courseId, String lessonId, String requesterSub, boolean force);
 }

@@ -570,7 +570,15 @@ button:disabled {
 .lesson-page-toolbar {
   display: flex;
   justify-content: flex-end;
+  align-items: center;
+  gap: 0.75rem;
   margin-bottom: 1rem;
+}
+
+.lesson-generating-note {
+  margin: 0 0 0.75rem;
+  font-size: 0.95rem;
+  color: var(--muted, #64748b);
 }
 
 .lesson-pdf-exporter {

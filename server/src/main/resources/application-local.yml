@@ -1,3 +1,6 @@
-spring:
-  config:
-    import: optional:file:.env[.properties]
+# Local development profile.
+# The optional `.env` file is imported by application.yml for all profiles, so
+# MONGO_URI / AUTH0_* / GEMINI_API_KEY are available here too.
+# LocalSecurityConfig (@Profile "local") provides a permissive JwtDecoder so you
+# can exercise protected APIs without a real Auth0 login. Run the DEFAULT profile
+# (no SPRING_PROFILES_ACTIVE) to validate real Auth0 tokens for browser login.

@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -56,5 +57,13 @@ public class CourseController {
     public CourseResponse getCourseById(@PathVariable String courseId,
                                         @AuthenticationPrincipal Jwt jwt) {
         return courseService.getCourseById(courseId, jwt.getSubject());
+    }
+
+    @PostMapping("/{courseId}/lessons/{lessonId}/generate")
+    public CourseResponse.LessonResponse generateLesson(@PathVariable String courseId,
+                                                        @PathVariable String lessonId,
+                                                        @RequestParam(name = "force", defaultValue = "false") boolean force,
+                                                        @AuthenticationPrincipal Jwt jwt) {
+        return courseService.generateAndSaveLesson(courseId, lessonId, jwt.getSubject(), force);
     }
 }

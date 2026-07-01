@@ -1,6 +1,8 @@
 spring:
   application:
     name: LearnForge API
+  config:
+    import: optional:file:.env[.properties]
   data:
     mongodb:
       uri: ${MONGO_URI:mongodb://localhost:27017/learnforge}

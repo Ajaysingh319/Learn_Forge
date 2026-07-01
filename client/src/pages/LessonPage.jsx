@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useCallback, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import ErrorMessage from '../components/ErrorMessage'
 import HinglishAudioPanel from '../components/HinglishAudioPanel'
@@ -7,81 +7,27 @@ import LessonRenderer from '../components/LessonRenderer'
 import { LessonSkeleton } from '../components/SkeletonLoader'
 import useAuth from '../hooks/useAuth'
 import useAsync from '../hooks/useAsync'
-import { fetchCourseById, fetchMyCoursesFull } from '../utils/api'
+import { fetchCourseById, fetchMyCoursesFull, generateLessonContent } from '../utils/api'
 
-function buildSampleLesson(label) {
-  return {
-    title: `Lesson: ${label}`,
-    objectives: [
-      'Understand the core concepts covered in this lesson',
-      'Identify practical examples and use cases',
-      'Apply knowledge through interactive checks',
-    ],
-    content: [
-      { type: 'heading', text: 'Introduction' },
-      {
-        type: 'paragraph',
-        text: 'This lesson demonstrates the structured block renderer used by LearnForge.',
-      },
-      {
-        type: 'code',
-        language: 'javascript',
-        text: "const greeting = 'Hello, LearnForge!';\nconsole.log(greeting);",
-      },
-      { type: 'video', query: 'Introductory tutorial for this lesson topic' },
-      {
-        type: 'mcq',
-        question: 'What is the purpose of LessonRenderer?',
-        options: [
-          'To store courses in MongoDB',
-          'To render structured lesson JSON blocks',
-          'To replace Auth0 login',
-          'To deploy the frontend',
-        ],
-        answer: 1,
-        explanation: 'LessonRenderer maps JSON block types to dedicated UI components.',
-      },
-      {
-        type: 'mcq',
-        question: 'Which block type is used for code snippets?',
-        options: ['heading', 'paragraph', 'code', 'video'],
-        answer: 2,
-        explanation: 'The code block renders syntax-friendly snippets with a language label.',
-      },
-      {
-        type: 'mcq',
-        question: 'What field does a video block use for search?',
-        options: ['url', 'query', 'embed', 'title'],
-        answer: 1,
-        explanation: 'Video blocks store a search query until YouTube integration is added.',
-      },
-      {
-        type: 'mcq',
-        question: 'How many MCQs should a generated lesson include?',
-        options: ['1-2', '4-5', '10-12', 'None'],
-        answer: 1,
-        explanation: 'The AI lesson pipeline targets 4 to 5 MCQs at the end of each lesson.',
-      },
-    ],
-    resources: [
-      {
-        title: 'Official documentation for this topic',
-        url: 'https://developer.mozilla.org/',
-      },
-      {
-        title: 'Further reading and tutorials',
-        url: 'https://www.google.com/search?q=learn+this+topic',
-      },
-    ],
-  }
+function hasContent(lesson) {
+  return Boolean(lesson) && Array.isArray(lesson.content) && lesson.content.length > 0
 }
 
-function findLessonInCourses(courses, lessonId) {
+function locateNested(course, moduleIndex, lessonIndex) {
+  const module = course?.modules?.[Number(moduleIndex)]
+  const lesson = module?.lessons?.[Number(lessonIndex)]
+  if (!course || !lesson) {
+    return null
+  }
+  return { courseId: course.id, lesson }
+}
+
+function locateById(courses, lessonId) {
   for (const course of courses) {
     for (const module of course.modules || []) {
       for (const lesson of module.lessons || []) {
         if (lesson.id === lessonId) {
-          return lesson
+          return { courseId: course.id, lesson }
         }
       }
     }
@@ -89,53 +35,85 @@ function findLessonInCourses(courses, lessonId) {
   return null
 }
 
-function resolveLessonFromCourse(course, moduleIndex, lessonIndex) {
-  const module = course?.modules?.[Number(moduleIndex)]
-  const lesson = module?.lessons?.[Number(lessonIndex)]
-  if (!module || !lesson) {
-    return null
-  }
-  return lesson
-}
-
 function LessonPage() {
   const { id, courseId, moduleIndex, lessonIndex } = useParams()
   const { getAccessTokenSilently } = useAuth()
   const isNestedRoute = courseId !== undefined
+  const [regenerating, setRegenerating] = useState(false)
 
-  const fallbackLesson = useMemo(
-    () => buildSampleLesson(id || `${courseId}-${moduleIndex}-${lessonIndex}`),
-    [id, courseId, moduleIndex, lessonIndex],
-  )
-
-  const { data: lesson, loading, error, reload } = useAsync(async () => {
+  const load = useCallback(async () => {
+    let located = null
     if (isNestedRoute) {
       const course = await fetchCourseById(courseId, getAccessTokenSilently)
-      const resolved = resolveLessonFromCourse(course, moduleIndex, lessonIndex)
-      return resolved || fallbackLesson
-    }
-
-    if (id) {
+      located = locateNested(course, moduleIndex, lessonIndex)
+    } else if (id) {
       const courses = await fetchMyCoursesFull(getAccessTokenSilently)
-      return findLessonInCourses(courses, id) || fallbackLesson
+      located = locateById(Array.isArray(courses) ? courses.filter(Boolean) : [], id)
+    } else {
+      throw new Error('Lesson route parameters are missing.')
     }
 
-    throw new Error('Lesson route parameters are missing.')
-  }, [id, courseId, moduleIndex, lessonIndex, getAccessTokenSilently, isNestedRoute, fallbackLesson])
+    if (!located) {
+      throw new Error('Lesson not found. Open it from one of your saved courses.')
+    }
 
-  if (loading) {
-    return <LessonSkeleton />
+    // Lessons are saved as titles only. Generate the real content with AI on first
+    // view and persist it, so revisiting the lesson is instant.
+    const lesson = hasContent(located.lesson)
+      ? located.lesson
+      : await generateLessonContent(located.courseId, located.lesson.id, getAccessTokenSilently)
+
+    return { courseId: located.courseId, lessonId: located.lesson.id, lesson }
+  }, [id, courseId, moduleIndex, lessonIndex, getAccessTokenSilently, isNestedRoute])
+
+  const { data, loading, error, reload } = useAsync(load, [load])
+  const lesson = data?.lesson
+
+  const handleRegenerate = async () => {
+    if (!data || regenerating) {
+      return
+    }
+    setRegenerating(true)
+    try {
+      await generateLessonContent(data.courseId, data.lessonId, getAccessTokenSilently, true)
+      await reload()
+    } catch {
+      // reload() surfaces its own error state; regenerate failure is non-fatal.
+    } finally {
+      setRegenerating(false)
+    }
+  }
+
+  if (loading || regenerating) {
+    return (
+      <section className="page">
+        <p className="lesson-generating-note">
+          Generating lesson content with AI — this can take a few seconds…
+        </p>
+        <LessonSkeleton />
+      </section>
+    )
+  }
+
+  if (error) {
+    return (
+      <section className="page">
+        <ErrorMessage message={error} onRetry={reload} />
+      </section>
+    )
   }
 
   return (
     <section className="page">
-      {error ? (
-        <ErrorMessage
-          message={`${error}. Showing fallback lesson preview.`}
-          onRetry={reload}
-        />
-      ) : null}
       <div className="lesson-page-toolbar">
+        <button
+          type="button"
+          className="button-secondary"
+          onClick={handleRegenerate}
+          disabled={regenerating}
+        >
+          Regenerate with AI
+        </button>
         <LessonPDFExporter
           title={lesson?.title}
           objectives={lesson?.objectives || []}

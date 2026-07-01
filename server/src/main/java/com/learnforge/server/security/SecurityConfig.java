@@ -39,6 +39,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/youtube").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/courses").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/courses/save-outline").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/courses/*/lessons/*/generate").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/courses/my").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/courses/my/full").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/courses/*").authenticated()

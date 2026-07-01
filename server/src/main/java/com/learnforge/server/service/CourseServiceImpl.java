@@ -4,6 +4,7 @@ import com.learnforge.server.dto.CourseResponse;
 import com.learnforge.server.dto.CourseSummaryResponse;
 import com.learnforge.server.dto.CreateCourseRequest;
 import com.learnforge.server.dto.GeneratedCourseOutlineResponse;
+import com.learnforge.server.dto.GeneratedLessonResponse;
 import com.learnforge.server.exception.ForbiddenException;
 import com.learnforge.server.exception.ResourceNotFoundException;
 import com.learnforge.server.model.Course;
@@ -28,13 +29,16 @@ public class CourseServiceImpl implements CourseService {
     private final CourseRepository courseRepository;
     private final CourseModuleRepository courseModuleRepository;
     private final LessonRepository lessonRepository;
+    private final LessonGenerationService lessonGenerationService;
 
     public CourseServiceImpl(CourseRepository courseRepository,
                              CourseModuleRepository courseModuleRepository,
-                             LessonRepository lessonRepository) {
+                             LessonRepository lessonRepository,
+                             LessonGenerationService lessonGenerationService) {
         this.courseRepository = courseRepository;
         this.courseModuleRepository = courseModuleRepository;
         this.lessonRepository = lessonRepository;
+        this.lessonGenerationService = lessonGenerationService;
     }
 
     @Override
@@ -119,6 +123,55 @@ public class CourseServiceImpl implements CourseService {
         return summaries;
     }
 
+    @Override
+    public CourseResponse.LessonResponse generateAndSaveLesson(String courseId, String lessonId,
+                                                               String requesterSub, boolean force) {
+        Course course = findCourseOrThrow(courseId);
+        assertOwner(course, requesterSub);
+
+        Lesson lesson = lessonRepository.findById(lessonId)
+                .orElseThrow(() -> new ResourceNotFoundException("Lesson not found: " + lessonId));
+
+        CourseModule module = courseModuleRepository.findById(lesson.getModuleId())
+                .orElseThrow(() -> new ResourceNotFoundException("Module not found for lesson: " + lessonId));
+
+        if (module.getCourseId() == null || !module.getCourseId().equals(course.getId())) {
+            throw new ForbiddenException("Lesson does not belong to the requested course");
+        }
+
+        boolean alreadyGenerated = lesson.isEnriched() && !safeList(lesson.getContent()).isEmpty();
+        if (alreadyGenerated && !force) {
+            return toLessonResponse(lesson);
+        }
+
+        GeneratedLessonResponse generated = lessonGenerationService.generateLesson(
+                course.getTitle(), module.getTitle(), lesson.getTitle());
+
+        lesson.setTitle(generated.getTitle() == null || generated.getTitle().isBlank()
+                ? lesson.getTitle() : generated.getTitle());
+        lesson.setObjectives(new ArrayList<>(safeList(generated.getObjectives())));
+        lesson.setContent(new ArrayList<>(safeList(generated.getContent())));
+        lesson.setResources(new ArrayList<>(safeList(generated.getResources())));
+        lesson.setEnriched(true);
+        lesson.setUpdatedAt(Instant.now());
+        lesson = lessonRepository.save(lesson);
+
+        return toLessonResponse(lesson);
+    }
+
+    private CourseResponse.LessonResponse toLessonResponse(Lesson lesson) {
+        CourseResponse.LessonResponse lessonResponse = new CourseResponse.LessonResponse();
+        lessonResponse.setId(lesson.getId());
+        lessonResponse.setTitle(lesson.getTitle());
+        lessonResponse.setObjectives(new ArrayList<>(safeList(lesson.getObjectives())));
+        lessonResponse.setContent(new ArrayList<>(safeList(lesson.getContent())));
+        lessonResponse.setResources(new ArrayList<>(safeList(lesson.getResources())));
+        lessonResponse.setEnriched(lesson.isEnriched());
+        lessonResponse.setCreatedAt(lesson.getCreatedAt());
+        lessonResponse.setUpdatedAt(lesson.getUpdatedAt());
+        return lessonResponse;
+    }
+
     private Course findCourseOrThrow(String courseId) {
         return courseRepository.findById(courseId)
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found: " + courseId));
@@ -186,16 +239,7 @@ public class CourseServiceImpl implements CourseService {
 
             List<CourseResponse.LessonResponse> lessonResponses = new ArrayList<CourseResponse.LessonResponse>();
             for (Lesson lesson : lessons) {
-                CourseResponse.LessonResponse lessonResponse = new CourseResponse.LessonResponse();
-                lessonResponse.setId(lesson.getId());
-                lessonResponse.setTitle(lesson.getTitle());
-                lessonResponse.setObjectives(new ArrayList<>(safeList(lesson.getObjectives())));
-                lessonResponse.setContent(new ArrayList<>(safeList(lesson.getContent())));
-                lessonResponse.setResources(new ArrayList<>(safeList(lesson.getResources())));
-                lessonResponse.setEnriched(lesson.isEnriched());
-                lessonResponse.setCreatedAt(lesson.getCreatedAt());
-                lessonResponse.setUpdatedAt(lesson.getUpdatedAt());
-                lessonResponses.add(lessonResponse);
+                lessonResponses.add(toLessonResponse(lesson));
             }
 
             moduleResponse.setLessons(lessonResponses);

@@ -88,6 +88,18 @@ export async function fetchCourseById(courseId, getAccessTokenSilently) {
   })
 }
 
+export async function generateLessonContent(courseId, lessonId, getAccessTokenSilently, force = false) {
+  return authFetch(
+    `/api/courses/${courseId}/lessons/${lessonId}/generate${force ? '?force=true' : ''}`,
+    getAccessTokenSilently,
+    {
+      method: 'POST',
+      timeoutMs: AI_TIMEOUT_MS,
+      retries: 1,
+    },
+  )
+}
+
 export async function createCourse(payload, getAccessTokenSilently) {
   return authFetch('/api/courses', getAccessTokenSilently, {
     method: 'POST',
