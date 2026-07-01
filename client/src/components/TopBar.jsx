@@ -1,4 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
+import useAuth from '../hooks/useAuth'
 
 function buildBreadcrumbs(pathname) {
   const segments = pathname.split('/').filter(Boolean)
@@ -31,8 +32,14 @@ function buildBreadcrumbs(pathname) {
   return crumbs
 }
 
+function firstName(user) {
+  const source = user?.name || user?.email || ''
+  return source.split(/[\s@]/)[0] || 'there'
+}
+
 function TopBar() {
   const location = useLocation()
+  const { user } = useAuth()
   const breadcrumbs = buildBreadcrumbs(location.pathname)
 
   return (
@@ -52,6 +59,9 @@ function TopBar() {
           )
         })}
       </nav>
+      <div className="topbar-greeting">
+        Hi, <strong>{firstName(user)}</strong> 👋
+      </div>
     </header>
   )
 }

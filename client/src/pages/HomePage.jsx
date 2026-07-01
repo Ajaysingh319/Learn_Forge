@@ -9,9 +9,9 @@ import useAuth from '../hooks/useAuth'
 import { fetchMyCourses, generateCourse, saveGeneratedOutline } from '../utils/api'
 
 function HomePage() {
-  const { setLastPrompt, lastPrompt } = useAppContext()
+  const { setLastPrompt } = useAppContext()
   const { pushToast } = useToast()
-  const { isAuthenticated, user, getAccessTokenSilently } = useAuth()
+  const { isAuthenticated, getAccessTokenSilently } = useAuth()
   const [courses, setCourses] = useState([])
   const [loadingCourses, setLoadingCourses] = useState(false)
   const [generating, setGenerating] = useState(false)
@@ -42,13 +42,6 @@ function HomePage() {
 
   const handleGenerateAndSave = async (topic) => {
     setLastPrompt(topic)
-    if (!isAuthenticated) {
-      const message = 'Please login to generate and save courses.'
-      setGenerateError(message)
-      pushToast(message, 'error')
-      return
-    }
-
     setGenerating(true)
     setGenerateError('')
     try {
@@ -74,48 +67,69 @@ function HomePage() {
     }
   }
 
+  const totalLessons = courses.reduce((sum, course) => sum + (course.lessonCount || 0), 0)
+
   return (
-    <section className="page">
-      <header className="page-header">
-        <h1>Text-to-Learn Course Generator</h1>
-        <p>Submit any topic and generate a structured course outline.</p>
+    <section className="page dashboard">
+      <header className="dash-hero">
+        <span className="dash-hero-badge">AI Course Studio</span>
+        <h1>What do you want to learn today?</h1>
+        <p>
+          Enter any topic and LearnForge instantly builds a structured course — modules, lessons,
+          quizzes, videos, and resources included.
+        </p>
       </header>
 
-      <PromptForm onSubmit={handleGenerateAndSave} isLoading={generating} />
-      {generateError ? <ErrorMessage message={generateError} /> : null}
+      <div className="dash-grid">
+        <div className="dash-primary">
+          <PromptForm onSubmit={handleGenerateAndSave} isLoading={generating} />
+          {generateError ? <ErrorMessage message={generateError} /> : null}
+        </div>
 
-      <section className="card">
-        <h2>Latest Prompt</h2>
-        <p>{lastPrompt || 'No prompt submitted in this session yet.'}</p>
-      </section>
+        <aside className="dash-stats">
+          <div className="stat-card">
+            <span className="stat-value">{courses.length}</span>
+            <span className="stat-label">Courses created</span>
+          </div>
+          <div className="stat-card">
+            <span className="stat-value">{totalLessons}</span>
+            <span className="stat-label">Total lessons</span>
+          </div>
+        </aside>
+      </div>
 
-      <section className="card">
-        <h2>Auth Status</h2>
-        <p>
-          {isAuthenticated
-            ? `Signed in as ${user?.email || user?.name || user?.sub}`
-            : 'Not signed in yet. Login to access protected routes and save courses.'}
-        </p>
-      </section>
+      <section className="dash-section">
+        <div className="dash-section-head">
+          <h2>My courses</h2>
+          {courses.length > 0 ? <span className="pill">{courses.length}</span> : null}
+        </div>
 
-      <section className="card">
-        <h2>My Saved Courses</h2>
         {coursesError ? <ErrorMessage message={coursesError} onRetry={loadCourses} /> : null}
         {loadingCourses ? <SkeletonList count={3} /> : null}
-        {!loadingCourses && courses.length === 0 ? (
-          <p>No saved courses yet. Generate one to get started.</p>
+
+        {!loadingCourses && !coursesError && courses.length === 0 ? (
+          <div className="empty-card">
+            <span className="empty-emoji" aria-hidden="true">🎓</span>
+            <h3>No courses yet</h3>
+            <p>Generate your first course above to get started.</p>
+          </div>
         ) : null}
+
         {!loadingCourses && courses.length > 0 ? (
-          <ul className="course-list">
+          <div className="course-grid">
             {courses.map((course) => (
-              <li key={course?.id || course?.title}>
-                <Link to={`/course/${course.id}`}>{course?.title || 'Untitled course'}</Link>
-                <span>
-                  {course.moduleCount} modules · {course.lessonCount} lessons
-                </span>
-              </li>
+              <Link key={course?.id || course?.title} to={`/course/${course.id}`} className="course-card">
+                <span className="course-card-icon" aria-hidden="true">📘</span>
+                <h3>{course?.title || 'Untitled course'}</h3>
+                <div className="course-card-meta">
+                  <span>{course.moduleCount || 0} modules</span>
+                  <span className="dot" aria-hidden="true">•</span>
+                  <span>{course.lessonCount || 0} lessons</span>
+                </div>
+                <span className="course-card-cta">Open course →</span>
+              </Link>
             ))}
-          </ul>
+          </div>
         ) : null}
       </section>
     </section>
