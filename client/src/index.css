@@ -8,7 +8,7 @@
   --grad: linear-gradient(135deg, #6366f1 0%, #8b5cf6 55%, #a855f7 100%);
   --grad-text: linear-gradient(120deg, #818cf8, #c084fc 60%, #f0abfc);
 
-  --bg: #f4f5fb;
+  --bg: #eceefb;
   --surface: #ffffff;
   --surface-2: #f8fafc;
   --text: #0f172a;
@@ -187,6 +187,12 @@ input[type='radio'] {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  background:
+    radial-gradient(1000px 520px at 100% -8%, rgba(139, 92, 246, 0.16), transparent 60%),
+    radial-gradient(820px 480px at -8% 10%, rgba(99, 102, 241, 0.14), transparent 55%),
+    radial-gradient(700px 700px at 60% 110%, rgba(168, 85, 247, 0.1), transparent 60%),
+    linear-gradient(180deg, #eceefb 0%, #f2f3fc 45%, #f5f3fe 100%);
+  background-attachment: fixed;
 }
 
 .sidebar {
