@@ -33,8 +33,15 @@ function buildBreadcrumbs(pathname) {
 }
 
 function firstName(user) {
-  const source = user?.name || user?.email || ''
-  return source.split(/[\s@]/)[0] || 'there'
+  // Prefer the profile's given/first name; then the first word of the full name;
+  // then the nickname/username; then the email local part.
+  const raw =
+    user?.given_name ||
+    (user?.name && !user.name.includes('@') ? user.name.split(/\s+/)[0] : '') ||
+    user?.nickname ||
+    (user?.email ? user.email.split('@')[0] : '') ||
+    'there'
+  return raw.charAt(0).toUpperCase() + raw.slice(1)
 }
 
 function TopBar() {
