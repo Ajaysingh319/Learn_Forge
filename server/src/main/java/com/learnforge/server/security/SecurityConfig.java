@@ -1,10 +1,12 @@
 package com.learnforge.server.security;
 
 import com.learnforge.server.config.Auth0Properties;
+import java.time.Duration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -16,6 +18,7 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.client.RestTemplate;
 
 @Configuration
 public class SecurityConfig {
@@ -53,8 +56,20 @@ public class SecurityConfig {
     @Bean
     @Profile("!test & !local")
     public JwtDecoder jwtDecoder() {
-        NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withIssuerLocation(auth0Properties.getIssuer()).build();
-        OAuth2TokenValidator<Jwt> withIssuer = JwtValidators.createDefaultWithIssuer(auth0Properties.getIssuer());
+        String issuer = auth0Properties.getIssuer();
+        String jwkSetUri = (issuer.endsWith("/") ? issuer : issuer + "/") + ".well-known/jwks.json";
+
+        // Use the JWKS URI directly (fetched lazily on first token, not at startup) with generous
+        // timeouts, so the app still boots when Auth0 is momentarily slow/unreachable and tolerates
+        // slow networks/proxies instead of failing fast.
+        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+        requestFactory.setConnectTimeout(Duration.ofSeconds(15));
+        requestFactory.setReadTimeout(Duration.ofSeconds(30));
+
+        NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withJwkSetUri(jwkSetUri)
+                .restOperations(new RestTemplate(requestFactory))
+                .build();
+        OAuth2TokenValidator<Jwt> withIssuer = JwtValidators.createDefaultWithIssuer(issuer);
         OAuth2TokenValidator<Jwt> withAudience = new AudienceValidator(auth0Properties.getAudience());
         OAuth2TokenValidator<Jwt> validator = new DelegatingOAuth2TokenValidator<>(withIssuer, withAudience);
         jwtDecoder.setJwtValidator(validator);

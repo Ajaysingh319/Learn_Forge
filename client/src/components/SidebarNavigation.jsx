@@ -10,8 +10,10 @@ const HomeIcon = () => (
 
 const links = [{ to: '/', label: 'Dashboard', end: true, icon: <HomeIcon /> }]
 
+const DISPLAY_NAME = import.meta.env.VITE_DISPLAY_NAME
+
 function initialsFor(user) {
-  const source = user?.name || user?.email || 'U'
+  const source = DISPLAY_NAME || user?.name || user?.email || 'U'
   return source.trim().slice(0, 1).toUpperCase()
 }
 
@@ -45,7 +47,7 @@ function SidebarNavigation() {
       <div className="sidebar-footer">
         <div className="user-card">
           <span className="user-avatar" aria-hidden="true">{initialsFor(user)}</span>
-          <span className="user-name">{user?.name || user?.email || 'Signed in'}</span>
+          <span className="user-name">{DISPLAY_NAME || user?.name || user?.email || 'Signed in'}</span>
         </div>
         <button type="button" className="btn btn-ghost-dark" onClick={logout}>
           Log out

@@ -33,8 +33,12 @@ function buildBreadcrumbs(pathname) {
 }
 
 function firstName(user) {
-  // Prefer the profile's given/first name; then the first word of the full name;
-  // then the nickname/username; then the email local part.
+  // Explicit override wins (useful when the Auth0 profile has no real first name).
+  const override = import.meta.env.VITE_DISPLAY_NAME
+  if (override && override.trim()) {
+    return override.trim()
+  }
+  // Otherwise prefer given/first name; then first word of full name; then nickname; then email.
   const raw =
     user?.given_name ||
     (user?.name && !user.name.includes('@') ? user.name.split(/\s+/)[0] : '') ||
